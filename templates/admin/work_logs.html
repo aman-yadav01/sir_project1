@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}All Work Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "admin/includes/sidebar.html" %}
+
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-journal-richtext" style="color:#ff6b35;"></i> All Work Logs</h2>
+                <a href="{% url 'admin_task_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Tasks
+                </a>
+            </div>
+
+            <!-- Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">Filter by Employee</label>
+                            <select name="employee" class="form-select">
+                                <option value="">All Employees</option>
+                                {% for emp in employees %}
+                                    <option value="{{ emp.id }}" {% if employee_filter == emp.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ emp.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-journal-text"></i> Work Logs
+                    <span class="badge bg-secondary ms-2">{{ logs.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Task</th>
+                                    <th>Date</th>
+                                    <th>Work Update</th>
+                                    <th>Photo</th>
+                                    <th>Hours</th>
+                                    <th>Submitted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ log.employee.full_name }}</strong>
+                                        <br><small class="text-muted">{{ log.employee.employee_id }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'admin_task_detail' log.task.pk %}">
+                                            {{ log.task.title|truncatechars:40 }}
+                                        </a>
+                                    </td>
+                                    <td>{{ log.log_date|date:"d M Y" }}</td>
+                                    <td style="max-width:250px;">
+                                        <span style="white-space:pre-wrap;">{{ log.description|truncatechars:100 }}</span>
+                                    </td>
+                                    <td>
+                                        {% if log.photo %}
+                                        <img src="{{ log.photo.url }}" style="width:70px;height:55px;object-fit:cover;border-radius:8px;cursor:pointer;"
+                                             onclick="openPhotoModal('{{ log.photo.url }}', '{{ log.employee.full_name }} - {{ log.log_date }}')"
+                                             title="Click to enlarge">
+                                        {% else %}
+                                        <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.hours_worked %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+                                                {{ log.hours_worked }} hrs
+                                            </span>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ log.created_at|date:"d M, h:i A" }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-journal" style="font-size:2rem;"></i>
+                                        <br>Koi work log nahi mila.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Fullscreen Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:rgba(0,0,0,.9);border:none;">
+            <div class="modal-body p-2 text-center position-relative">
+                <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2"
+                        data-bs-dismiss="modal" style="z-index:10;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <img id="modalPhoto" src="" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;" alt="">
+                <div id="modalCaption" class="text-white mt-2 fw-bold fs-6"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPhotoModal(url, caption) {
+    document.getElementById('modalPhoto').src = url;
+    document.getElementById('modalCaption').textContent = caption;
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+</script>
+{% endblock %}

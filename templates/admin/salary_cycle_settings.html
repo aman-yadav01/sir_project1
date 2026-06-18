@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Salary Cycle Settings{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-gear"></i> Salary Cycle Settings</h2>
+
+                <a href="{% url 'salary_management' %}" class="btn btn-primary">
+
+                    <i class="bi bi-arrow-left"></i> Back to Salary Management
+
+                </a>
+
+            </div>
+
+            
+
+            <!-- Current Cycle Info -->
+
+            {% if cycle_settings %}
+
+            <div class="card mb-4 border-success">
+
+                <div class="card-header bg-success text-white">
+
+                    <i class="bi bi-check-circle"></i> Current Salary Cycle Configuration
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Cycle Name</h6>
+
+                            <h5>{{ cycle_settings.cycle_name }}</h5>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Cycle Start Day</h6>
+
+                            <h5>{{ cycle_settings.cycle_start_day }}th of every month</h5>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Status</h6>
+
+                            <h5>
+
+                                {% if cycle_settings.is_active %}
+
+                                    <span class="badge bg-success">Active</span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">Inactive</span>
+
+                                {% endif %}
+
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    {% if cycle_start and cycle_end %}
+
+                    <hr>
+
+                    <div class="alert alert-info mb-0">
+
+                        <i class="bi bi-calendar-range"></i> 
+
+                        <strong>Current Cycle:</strong> 
+
+                        {{ cycle_start|date:"d M Y" }} to {{ cycle_end|date:"d M Y" }}
+
+                        ({{ cycle_start|date:"d" }}th to {{ cycle_end|date:"d" }}th)
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-warning">
+
+                <i class="bi bi-exclamation-triangle"></i> 
+
+                <strong>No salary cycle configured!</strong> Please configure the salary cycle below.
+
+            </div>
+
+            {% endif %}
+
+            
+
+            <!-- Configuration Form -->
+
+            <div class="card">
+
+                <div class="card-header bg-primary text-white">
+
+                    <i class="bi bi-pencil"></i> Configure Salary Cycle
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-bold">{{ form.cycle_name.label }}</label>
+
+                                {{ form.cycle_name }}
+
+                                {% if form.cycle_name.help_text %}
+
+                                    <small class="form-text text-muted">{{ form.cycle_name.help_text }}</small>
+
+                                {% endif %}
+
+                                {% if form.cycle_name.errors %}
+
+                                    <div class="text-danger">{{ form.cycle_name.errors }}</div>
+
+                                {% endif %}
+
+                            </div>
+
+                            
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-bold">{{ form.cycle_start_day.label }}</label>
+
+                                {{ form.cycle_start_day }}
+
+                                {% if form.cycle_start_day.help_text %}
+
+                                    <small class="form-text text-muted">{{ form.cycle_start_day.help_text }}</small>
+
+                                {% endif %}
+
+                                {% if form.cycle_start_day.errors %}
+
+                                    <div class="text-danger">{{ form.cycle_start_day.errors }}</div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div class="form-check mb-4">
+
+                            {{ form.is_active }}
+
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+
+                                {{ form.is_active.label }}
+
+                            </label>
+
+                        </div>
+
+                        
+
+                        <button type="submit" class="btn btn-success btn-lg">
+
+                            <i class="bi bi-check-circle"></i> Save Configuration
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Examples -->
+
+            <div class="card mt-4">
+
+                <div class="card-header bg-info text-white">
+
+                    <i class="bi bi-lightbulb"></i> Examples
+
+                </div>
+
+                <div class="card-body">
+
+                    <h6 class="fw-bold">Common Salary Cycles:</h6>
+
+                    <ul>
+
+                        <li><strong>10th to 9th:</strong> Cycle Start Day = 10 (10 Feb to 9 Mar)</li>
+
+                        <li><strong>1st to 31st:</strong> Cycle Start Day = 1 (1 Feb to 28/29 Feb)</li>
+
+                        <li><strong>15th to 14th:</strong> Cycle Start Day = 15 (15 Feb to 14 Mar)</li>
+
+                        <li><strong>25th to 24th:</strong> Cycle Start Day = 25 (25 Feb to 24 Mar)</li>
+
+                    </ul>
+
+                    
+
+                    <hr>
+
+                    
+
+                    <h6 class="fw-bold">How it works:</h6>
+
+                    <p class="mb-0">
+
+                        If you set <strong>Cycle Start Day = 10</strong>, then:
+
+                    </p>
+
+                    <ul class="mb-0">
+
+                        <li>Cycle 1: 10 Jan 2026 to 9 Feb 2026</li>
+
+                        <li>Cycle 2: 10 Feb 2026 to 9 Mar 2026</li>
+
+                        <li>Cycle 3: 10 Mar 2026 to 9 Apr 2026</li>
+
+                        <li>And so on...</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

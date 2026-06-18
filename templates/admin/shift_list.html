@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shift Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+                {% include "admin/includes/sidebar.html" %}
+        
+        <!-- Main Content -->
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-clock-history"></i> Shift Management</h2>
+                <a href="{% url 'shift_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Shift
+                </a>
+            </div>
+            
+            <div class="row">
+                {% for shift in shifts %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                {% if shift.name == 'morning' %}
+                                    <i class="bi bi-sunrise"></i>
+                                {% else %}
+                                    <i class="bi bi-moon-stars"></i>
+                                {% endif %}
+                                {{ shift.get_name_display }}
+                            </h5>
+                            <span class="badge {% if shift.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if shift.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <strong><i class="bi bi-box-arrow-in-right"></i> Punch In Start:</strong><br>
+                                    <span class="text-primary">{{ shift.punch_in_start|time:"h:i A" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong><i class="bi bi-clock"></i> Punch In End:</strong><br>
+                                    <span class="text-warning">{{ shift.punch_in_end|time:"h:i A" }}</span>
+                                    <small class="text-muted d-block">(Late after this)</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-box-arrow-right"></i> Expected Punch Out:</strong><br>
+                                <span class="text-success">{{ shift.punch_out_time|time:"h:i A" }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-hourglass-split"></i> Working Hours:</strong><br>
+                                <span class="badge bg-primary fs-6">{{ shift.get_working_hours }} hours</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-people"></i> Assigned Employees:</strong>
+                                <span class="badge bg-info">{{ shift.employees.count }}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'shift_edit' shift.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <a href="{% url 'shift_delete' shift.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No shifts created yet. Click "Create New Shift" to add one.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

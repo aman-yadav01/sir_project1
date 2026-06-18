@@ -1,0 +1,106 @@
+{% load static %}
+
+<div class="col-md-2 sidebar p-3">
+
+    <div class="text-white mb-4">
+
+        <h5><i class="bi bi-speedometer2"></i> Admin Panel</h5>
+
+    </div>
+
+    <nav class="nav flex-column">
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+
+            <i class="bi bi-house-door"></i> Dashboard
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'employee_list,employee_add,employee_edit,employee_profile' %}active{% endif %}" href="{% url 'employee_list' %}">
+
+            <i class="bi bi-people"></i> Employees
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}" href="{% url 'attendance_list' %}">
+
+            <i class="bi bi-calendar-check"></i> Attendance
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'leave_requests,leave_review' %}active{% endif %}" href="{% url 'leave_requests' %}">
+
+            <i class="bi bi-envelope"></i> Leave Requests
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'salary_management,salary_detail,add_payment' %}active{% endif %}" href="{% url 'salary_management' %}">
+
+            <i class="bi bi-cash-stack"></i> Salary Management
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'salary_cycle_settings' %}active{% endif %}" href="{% url 'salary_cycle_settings' %}">
+
+            <i class="bi bi-gear"></i> Salary Cycle Settings
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'salary_report' %}active{% endif %}" href="{% url 'salary_report' %}">
+
+            <i class="bi bi-cash-coin"></i> Old Salary Report
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'monthly_attendance_report' %}active{% endif %}" href="{% url 'monthly_attendance_report' %}">
+
+            <i class="bi bi-calendar3"></i> Monthly Report
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'shift_list,shift_create,shift_edit' %}active{% endif %}" href="{% url 'shift_list' %}">
+
+            <i class="bi bi-clock-history"></i> Shift Management
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'week_off_settings' %}active{% endif %}" href="{% url 'week_off_settings' %}">
+
+            <i class="bi bi-calendar-x"></i> Week Off
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'holiday_list,holiday_create,holiday_edit' %}active{% endif %}" href="{% url 'holiday_list' %}">
+
+            <i class="bi bi-calendar-event"></i> Holidays
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'incentive_list,incentive_add,incentive_edit,employee_incentives' %}active{% endif %}" href="{% url 'incentive_list' %}">
+
+            <i class="bi bi-gift"></i> Incentives
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name in 'admin_task_list,admin_task_create,admin_task_edit,admin_task_detail' %}active{% endif %}" href="{% url 'admin_task_list' %}">
+
+            <i class="bi bi-check2-square"></i> Tasks
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'admin_work_logs' %}active{% endif %}" href="{% url 'admin_work_logs' %}">
+
+            <i class="bi bi-journal-richtext"></i> Work Logs
+
+        </a>
+
+        <a class="nav-link {% if request.resolver_match.url_name == 'office_location_settings' %}active{% endif %}" href="{% url 'office_location_settings' %}">
+
+            <i class="bi bi-geo-alt"></i> Office Location
+
+        </a>
+
+    </nav>
+
+</div>
+

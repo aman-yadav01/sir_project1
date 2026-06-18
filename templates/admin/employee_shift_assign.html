@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}Assign Shift{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="row justify-content-center">
+
+                <div class="col-12 col-md-6">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h4><i class="bi bi-clock-history"></i> Assign Shift to Employee</h4>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="mb-4">
+
+                                <div class="d-flex align-items-center">
+
+                                    <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px;">
+
+                                    <div>
+
+                                        <h5 class="mb-0">{{ employee.full_name }}</h5>
+
+                                        <small class="text-muted">{{ employee.employee_id }} | {{ employee.designation }}</small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            
+
+                            {% if employee.shift %}
+
+                            <div class="alert alert-info">
+
+                                <strong>Current Shift:</strong> {{ employee.shift.get_name_display }}<br>
+
+                                <strong>Timings:</strong> {{ employee.shift.punch_in_start|time:"h:i A" }} - {{ employee.shift.punch_out_time|time:"h:i A" }}
+
+                            </div>
+
+                            {% else %}
+
+                            <div class="alert alert-warning">
+
+                                <i class="bi bi-exclamation-triangle"></i> No shift assigned yet
+
+                            </div>
+
+                            {% endif %}
+
+                            
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">{{ form.shift.label }}</label>
+
+                                    {{ form.shift }}
+
+                                    {% if form.shift.errors %}
+
+                                        <div class="text-danger">{{ form.shift.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="d-flex gap-2">
+
+                                    <button type="submit" class="btn btn-primary">
+
+                                        <i class="bi bi-check-circle"></i> Assign Shift
+
+                                    </button>
+
+                                    <a href="{% url 'employee_list' %}" class="btn btn-secondary">
+
+                                        <i class="bi bi-x-circle"></i> Cancel
+
+                                    </a>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

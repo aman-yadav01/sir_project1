@@ -1,0 +1,417 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AXSEM - Smart Attendance System{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+    
+    nav.navbar { display: none !important; }
+    
+    /* Custom Navbar */
+    .home-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: transparent;
+        box-shadow: none;
+        padding: 20px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .home-navbar.scrolled {
+        padding: 15px 0;
+        background: rgba(255, 140, 90, 0.98);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .home-navbar .navbar-logo {
+        height: 60px;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 3px 10px rgba(255, 255, 255, 0.3));
+    }
+    
+    .home-navbar.scrolled .navbar-logo {
+        height: 50px;
+    }
+    
+    .home-navbar .btn-nav {
+        padding: 10px 30px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+        transition: all 0.4s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        margin: 0 5px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .home-navbar .btn-admin-nav:hover {
+        background: rgba(255, 255, 255, 0.95);
+        color: #ff6b35;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .home-navbar .btn-employee-nav:hover {
+        background: rgba(255, 255, 255, 0.95);
+        color: #f5576c;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 50%, #f5576c 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        padding-top: 120px;
+    }
+    
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+    }
+    
+    .hero-content { position: relative; z-index: 1; }
+    
+    .axsem-logo-img {
+        width: 350px;
+        height: auto;
+        animation: float 3s ease-in-out infinite;
+        filter: drop-shadow(0 20px 40px rgba(255, 255, 255, 0.4));
+        transition: all 0.4s ease;
+        cursor: pointer;
+    }
+    
+    .axsem-logo-img:hover {
+        transform: scale(1.15) translateY(-15px);
+        filter: drop-shadow(0 30px 60px rgba(255, 255, 255, 0.6));
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+    }
+    
+    .hero-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
+        font-size: 3.5rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        letter-spacing: 2px;
+    }
+    
+    .hero-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        font-size: 1.3rem;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+        opacity: 0.95;
+    }
+    
+    .animated-badge {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 30px;
+        padding: 12px 24px !important;
+        transition: all 0.4s ease;
+        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .animated-badge:hover {
+        transform: translateY(-8px) scale(1.15);
+        box-shadow: 0 10px 35px rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: #ff6b35 !important;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        transition: all 0.4s ease;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .login-card:hover {
+        transform: translateY(-15px) scale(1.08);
+        box-shadow: 0 25px 60px rgba(255, 107, 53, 0.4);
+    }
+    
+    .login-icon {
+        font-size: 4.5rem;
+        margin-bottom: 1rem;
+        animation: iconFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes iconFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .btn-login {
+        padding: 0.9rem 2.5rem;
+        font-size: 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        transition: all 0.4s ease;
+        border: none;
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+    }
+    
+    .btn-primary.btn-login {
+        background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 100%);
+    }
+    
+    .btn-secondary.btn-login {
+        background: linear-gradient(135deg, #ff6b35 0%, #f5576c 100%);
+    }
+    
+    .feature-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        height: 100%;
+        border: 2px solid rgba(102, 126, 234, 0.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-15px) scale(1.03);
+        box-shadow: 0 20px 40px rgba(255, 107, 53, 0.25);
+    }
+    
+    .feature-icon {
+        font-size: 3.5rem;
+        background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 50%, #f5576c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        display: inline-block;
+        animation: iconBounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes iconBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes footerLogoFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @media (max-width: 768px) {
+        .home-navbar {
+            padding: 10px 0 !important;
+        }
+        
+        .home-navbar .navbar-logo {
+            height: 40px !important;
+        }
+        
+        .home-navbar .btn-nav {
+            padding: 8px 20px !important;
+            font-size: 0.85rem !important;
+            margin: 5px !important;
+        }
+        
+        .home-navbar .col-md-8 {
+            text-align: center !important;
+            margin-top: 10px;
+        }
+        
+        .hero-section { padding-top: 80px !important; min-height: auto !important; padding-bottom: 50px !important; }
+        .hero-title { font-size: 2.5rem !important; }
+        .hero-subtitle { font-size: 1.1rem !important; }
+        .axsem-logo-img { width: 250px !important; }
+        .login-card { padding: 2rem 1.5rem !important; }
+        .feature-card { padding: 2rem 1.5rem !important; }
+    }
+    
+    @media (max-width: 576px) {
+        .hero-title { font-size: 2rem !important; }
+        .axsem-logo-img { width: 200px !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Custom Navbar -->
+<nav class="home-navbar">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <a href="{% url 'home' %}">
+                    <img src="{% static 'images/axsem_banner.png' %}" alt="AXSEM" class="navbar-logo">
+                </a>
+            </div>
+            <div class="col-md-8 text-end">
+                <a href="{% url 'admin_login' %}" class="btn btn-admin-nav btn-nav">
+                    <i class="bi bi-shield-lock"></i> Admin Login
+                </a>
+                <a href="{% url 'employee_login' %}" class="btn btn-employee-nav btn-nav">
+                    <i class="bi bi-person"></i> Employee Login
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="hero-section">
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-center text-lg-start">
+                <div class="mb-4">
+                    <img src="{% static 'images/axsem_logo.png' %}" alt="AXSEM Logo" class="axsem-logo-img">
+                </div>
+                <h1 class="display-3 mb-4 hero-title">Smart Attendance System</h1>
+                <p class="lead mb-5 hero-subtitle">AI-Powered Face Recognition • Real-time Geofencing • Automated Payroll</p>
+                <div class="d-flex gap-3 flex-wrap justify-content-center justify-content-lg-start mb-4">
+                    <span class="badge animated-badge"><i class="bi bi-camera-fill me-2"></i> Face Recognition</span>
+                    <span class="badge animated-badge"><i class="bi bi-geo-alt-fill me-2"></i> Geofencing</span>
+                    <span class="badge animated-badge"><i class="bi bi-cash-stack me-2"></i> Auto Salary</span>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-5 mt-lg-0">
+                <div class="row g-4">
+                    <div class="col-12 col-sm-6">
+                        <div class="login-card text-center">
+                            <i class="bi bi-shield-lock-fill login-icon" style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            <h4 style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #ff6b35; font-size: 1.5rem;">Admin</h4>
+                            <p class="small mb-3" style="color: #555; font-weight: 500;">Manage employees & attendance</p>
+                            <a href="{% url 'admin_login' %}" class="btn btn-primary btn-login w-100">Login</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="login-card text-center">
+                            <i class="bi bi-person-circle login-icon" style="background: linear-gradient(135deg, #ff6b35 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            <h4 style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #f5576c; font-size: 1.5rem;">Employee</h4>
+                            <p class="small mb-3" style="color: #555; font-weight: 500;">Mark attendance & apply leaves</p>
+                            <a href="{% url 'employee_login' %}" class="btn btn-secondary btn-login w-100">Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="features" class="my-5 py-5" style="background: white;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge px-4 py-2 mb-3" style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 100%); font-size: 0.9rem; letter-spacing: 2px;">FEATURES</span>
+            <h2 class="display-4 fw-bold mb-3" style="font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Powerful Features</h2>
+            <p class="lead text-muted">Everything you need for modern attendance management</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-camera-video-fill feature-icon"></i>
+                    <h4>Face Recognition</h4>
+                    <p class="text-muted">Advanced AI-powered face detection with 99% accuracy.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-geo-fill feature-icon"></i>
+                    <h4>Geofencing</h4>
+                    <p class="text-muted">Location-based attendance with configurable radius.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-clock-history feature-icon"></i>
+                    <h4>Real-time Tracking</h4>
+                    <p class="text-muted">Live attendance monitoring with timestamps.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-calendar-check-fill feature-icon"></i>
+                    <h4>Leave Management</h4>
+                    <p class="text-muted">Digital leave application and approval system.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-cash-coin feature-icon"></i>
+                    <h4>Auto Salary</h4>
+                    <p class="text-muted">Automated monthly salary computation.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-file-earmark-bar-graph-fill feature-icon"></i>
+                    <h4>Reports</h4>
+                    <p class="text-muted">Comprehensive reports with CSV export.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-white py-5 mt-5" style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b35 50%, #f5576c 100%);">
+    <div class="container text-center">
+        <div class="mb-4">
+            <img src="{% static 'images/axsem_logo.png' %}" alt="AXSEM Logo" style="width: 200px; filter: drop-shadow(0 8px 25px rgba(0,0,0,0.4)); animation: footerLogoFloat 3s ease-in-out infinite;">
+        </div>
+        <h5 class="mb-3" style="font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: 2px;">AXSEM SOFTWARES PVT. LTD.</h5>
+        <p class="mb-2">&copy; 2026 AXSEM Softwares Pvt. Ltd. All rights reserved.</p>
+        <p class="small mb-3" style="opacity: 0.9;">Smart Attendance System v1.0 | Powered by AI & Face Recognition</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="#" class="text-white" style="font-size: 1.5rem;"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="text-white" style="font-size: 1.5rem;"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="text-white" style="font-size: 1.5rem;"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="text-white" style="font-size: 1.5rem;"><i class="bi bi-instagram"></i></a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.home-navbar');
+        
+        if (window.scrollY > 100) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+</script>
+
+{% endblock %}

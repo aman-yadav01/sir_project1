@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}{{ title }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-gift"></i> {{ title }}</h2>
+
+                <a href="{% url 'incentive_list' %}" class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left"></i> Back to Incentives
+
+                </a>
+
+            </div>
+
+
+
+            <div class="row justify-content-center">
+
+                <div class="col-12 col-md-8">
+
+                    <div class="card shadow">
+
+                        <div class="card-header bg-success text-white">
+
+                            <h5 class="mb-0"><i class="bi bi-gift"></i> Incentive Details</h5>
+
+                        </div>
+
+                        <div class="card-body p-4">
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+
+
+                                <div class="mb-3">
+
+                                    <label class="form-label fw-bold">{{ form.employee.label }}</label>
+
+                                    {{ form.employee }}
+
+                                    {% if form.employee.errors %}
+
+                                        <div class="text-danger small">{{ form.employee.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label fw-bold">{{ form.incentive_type.label }}</label>
+
+                                        {{ form.incentive_type }}
+
+                                        {% if form.incentive_type.errors %}
+
+                                            <div class="text-danger small">{{ form.incentive_type.errors }}</div>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label fw-bold">{{ form.incentive_date.label }}</label>
+
+                                        {{ form.incentive_date }}
+
+                                        {% if form.incentive_date.errors %}
+
+                                            <div class="text-danger small">{{ form.incentive_date.errors }}</div>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="mb-3">
+
+                                    <label class="form-label fw-bold">{{ form.title.label }}</label>
+
+                                    {{ form.title }}
+
+                                    {% if form.title.errors %}
+
+                                        <div class="text-danger small">{{ form.title.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <div class="mb-3">
+
+                                    <label class="form-label fw-bold">{{ form.amount.label }}</label>
+
+                                    <div class="input-group input-group-lg">
+
+                                        <span class="input-group-text">₹</span>
+
+                                        {{ form.amount }}
+
+                                    </div>
+
+                                    <!-- Quick amount buttons -->
+
+                                    <div class="mt-2">
+
+                                        <small class="text-muted">Quick select: </small>
+
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1 quick-amount" data-amount="500">₹500</button>
+
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1 quick-amount" data-amount="1000">₹1000</button>
+
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1 quick-amount" data-amount="2000">₹2000</button>
+
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1 quick-amount" data-amount="5000">₹5000</button>
+
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1 quick-amount" data-amount="10000">₹10000</button>
+
+                                    </div>
+
+                                    {% if form.amount.errors %}
+
+                                        <div class="text-danger small">{{ form.amount.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.reason.label }}</label>
+
+                                    {{ form.reason }}
+
+                                    {% if form.reason.errors %}
+
+                                        <div class="text-danger small">{{ form.reason.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <!-- Info box -->
+
+                                <div class="alert alert-info">
+
+                                    <i class="bi bi-info-circle"></i>
+
+                                    <strong>Note:</strong> Incentive will be automatically linked to the employee's salary cycle that covers the selected date, and the total salary will be updated accordingly.
+
+                                </div>
+
+
+
+                                <div class="d-grid gap-2">
+
+                                    <button type="submit" class="btn btn-success btn-lg">
+
+                                        <i class="bi bi-check-circle"></i> Save Incentive
+
+                                    </button>
+
+                                    <a href="{% url 'incentive_list' %}" class="btn btn-outline-secondary">
+
+                                        Cancel
+
+                                    </a>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+document.querySelectorAll('.quick-amount').forEach(btn => {
+
+    btn.addEventListener('click', function () {
+
+        document.getElementById('id_amount').value = this.dataset.amount;
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
+

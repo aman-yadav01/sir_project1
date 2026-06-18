@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Week Off Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+                {% include "admin/includes/sidebar.html" %}
+        
+        <div class="col-md-10 content-wrapper">
+            <h2 class="mb-4"><i class="bi bi-calendar-x"></i> Week Off Management</h2>
+            
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Configure Week Off Days</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Note:</strong> Week off days will NOT be counted as absent. Employees don't need to mark attendance on week off days.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Day of Week</th>
+                                        <th>Status</th>
+                                        <th>Week Off</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for week_off in week_offs %}
+                                    <tr>
+                                        <td>
+                                            <h5 class="mb-0">
+                                                <i class="bi bi-calendar-day"></i> 
+                                                {{ week_off.get_weekday_display }}
+                                            </h5>
+                                        </td>
+                                        <td>
+                                            {% if week_off.is_active %}
+                                                <span class="badge bg-success">Week Off</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Working Day</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="form-check form-switch">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    name="weekday_{{ week_off.weekday }}"
+                                                    id="weekday_{{ week_off.weekday }}"
+                                                    {% if week_off.is_active %}checked{% endif %}
+                                                >
+                                                <label class="form-check-label" for="weekday_{{ week_off.weekday }}">
+                                                    Mark as Week Off
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Save Week Off Settings
+                            </button>
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-info-circle"></i> How Week Off Works
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">Week Off Rules:</h6>
+                    <ul>
+                        <li><strong>Week off days are NOT counted as absent</strong> - No penalty applied</li>
+                        <li><strong>Employees don't need to punch in/out</strong> on week off days</li>
+                        <li><strong>Salary is NOT deducted</strong> for week off days</li>
+                        <li><strong>Multiple days can be set</strong> as week off (e.g., Saturday + Sunday)</li>
+                        <li><strong>Changes apply immediately</strong> to all employees</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6 class="text-success">Example:</h6>
+                    <p class="mb-0">
+                        If <strong>Sunday</strong> is marked as week off:<br>
+                        - Month has 4 Sundays = 4 days<br>
+                        - These 4 days will NOT be counted in absent calculation<br>
+                        - Employee salary will NOT be affected by these days
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

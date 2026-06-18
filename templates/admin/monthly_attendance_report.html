@@ -1,0 +1,1060 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}Monthly Attendance Report{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="py-4">
+
+                <div class="row mb-4">
+
+                    <div class="col-12">
+
+                        <h2 class="mb-3 animate-title">
+
+                            <i class="fas fa-calendar-alt"></i> Monthly Attendance Report
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+
+    <!-- Filter Section -->
+
+    <div class="card mb-4 filter-card">
+
+        <div class="card-body">
+
+            <form method="GET" class="row g-3">
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <label class="form-label fw-bold">
+
+                        <i class="fas fa-calendar"></i> Month
+
+                    </label>
+
+                    <select name="month" class="form-select form-select-lg">
+
+                        <option value="1" {% if month == 1 %}selected{% endif %}>January</option>
+
+                        <option value="2" {% if month == 2 %}selected{% endif %}>February</option>
+
+                        <option value="3" {% if month == 3 %}selected{% endif %}>March</option>
+
+                        <option value="4" {% if month == 4 %}selected{% endif %}>April</option>
+
+                        <option value="5" {% if month == 5 %}selected{% endif %}>May</option>
+
+                        <option value="6" {% if month == 6 %}selected{% endif %}>June</option>
+
+                        <option value="7" {% if month == 7 %}selected{% endif %}>July</option>
+
+                        <option value="8" {% if month == 8 %}selected{% endif %}>August</option>
+
+                        <option value="9" {% if month == 9 %}selected{% endif %}>September</option>
+
+                        <option value="10" {% if month == 10 %}selected{% endif %}>October</option>
+
+                        <option value="11" {% if month == 11 %}selected{% endif %}>November</option>
+
+                        <option value="12" {% if month == 12 %}selected{% endif %}>December</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <label class="form-label fw-bold">
+
+                        <i class="fas fa-calendar-alt"></i> Year
+
+                    </label>
+
+                    <select name="year" class="form-select form-select-lg">
+
+                        <option value="2024" {% if year == 2024 %}selected{% endif %}>2024</option>
+
+                        <option value="2025" {% if year == 2025 %}selected{% endif %}>2025</option>
+
+                        <option value="2026" {% if year == 2026 %}selected{% endif %}>2026</option>
+
+                        <option value="2027" {% if year == 2027 %}selected{% endif %}>2027</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-4">
+
+                    <label class="form-label fw-bold">
+
+                        <i class="fas fa-user"></i> Employee (Optional)
+
+                    </label>
+
+                    <select name="employee" class="form-select form-select-lg">
+
+                        <option value="">All Employees</option>
+
+                        {% for emp in all_employees %}
+
+                            <option value="{{ emp.id }}" {% if selected_employee == emp.id|stringformat:"s" %}selected{% endif %}>
+
+                                {{ emp.employee_id }} - {{ emp.full_name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+
+                    <button type="submit" class="btn btn-gradient w-100 btn-lg">
+
+                        <i class="fas fa-filter"></i> Filter
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Export Button -->
+
+    <div class="mb-3">
+
+        <a href="{% url 'export_monthly_report_pdf' %}?month={{ month }}&year={{ year }}{% if selected_employee %}&employee={{ selected_employee }}{% endif %}"
+
+           class="btn btn-danger btn-lg pulse-btn">
+
+            <i class="fas fa-file-pdf"></i> Export to PDF
+
+        </a>
+
+    </div>
+
+
+
+    <!-- Legend -->
+
+    <div class="card mb-4 legend-card">
+
+        <div class="card-body">
+
+            <h5 class="card-title"><i class="fas fa-info-circle"></i> Legend:</h5>
+
+            <div class="d-flex gap-4 flex-wrap">
+
+                <span class="legend-item">
+
+                    <span class="badge badge-present">P</span> Present
+
+                </span>
+
+                <span class="legend-item">
+
+                    <span class="badge badge-late">L</span> Late
+
+                </span>
+
+                <span class="legend-item">
+
+                    <span class="badge badge-absent">A</span> Absent
+
+                </span>
+
+                <span class="legend-item">
+
+                    <span class="badge badge-week-off">WO</span> Week Off
+
+                </span>
+
+                <span class="legend-item">
+
+                    <span class="badge badge-holiday">H</span> Holiday
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Employee Reports -->
+
+    {% for report in employee_reports %}
+
+    <div class="card mb-4 employee-card" style="animation-delay: {{ forloop.counter0|add:1|stringformat:"d" }}00ms;">
+
+        <div class="card-header-gradient">
+
+            <div class="d-flex align-items-center">
+
+                <img src="{{ report.employee.photo.url }}" 
+
+                     alt="{{ report.employee.full_name }}"
+
+                     class="employee-photo">
+
+                <div class="ms-3">
+
+                    <h4 class="mb-0 text-white">
+
+                        {{ report.employee.full_name }}
+
+                    </h4>
+
+                    <small class="text-white">
+
+                        <i class="fas fa-id-badge"></i> {{ report.employee.employee_id }} | 
+
+                        <i class="fas fa-briefcase"></i> {{ report.employee.designation }}
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <!-- Calendar -->
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered text-center calendar-table">
+
+                    <thead>
+
+                        <tr class="calendar-header">
+
+                            <th>Sun</th>
+
+                            <th>Mon</th>
+
+                            <th>Tue</th>
+
+                            <th>Wed</th>
+
+                            <th>Thu</th>
+
+                            <th>Fri</th>
+
+                            <th>Sat</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for week in report.calendar_weeks %}
+
+                        <tr>
+
+                            {% for day in week %}
+
+                            <td class="calendar-day
+
+                                {% if day.status == 'present' %}day-present
+
+                                {% elif day.status == 'late' %}day-late
+
+                                {% elif day.status == 'week_off' %}day-week-off
+
+                                {% elif day.status == 'holiday' %}day-holiday
+
+                                {% elif day.status == 'absent' and day.day %}day-absent
+
+                                {% endif %}">
+
+                                {% if day.day %}
+
+                                    <div class="day-number">{{ day.day }}</div>
+
+                                    {% if day.status == 'present' %}
+
+                                        <div class="day-status">
+
+                                            <i class="fas fa-check-circle"></i> P
+
+                                        </div>
+
+                                        {% if day.punch_in %}
+
+                                            <small class="day-time">{{ day.punch_in|date:"g:i A" }}</small>
+
+                                        {% endif %}
+
+                                    {% elif day.status == 'late' %}
+
+                                        <div class="day-status">
+
+                                            <i class="fas fa-clock"></i> L
+
+                                        </div>
+
+                                        {% if day.punch_in %}
+
+                                            <small class="day-time">{{ day.punch_in|date:"g:i A" }}</small>
+
+                                        {% endif %}
+
+                                    {% elif day.status == 'week_off' %}
+
+                                        <div class="day-status">
+
+                                            <i class="fas fa-calendar-times"></i> WO
+
+                                        </div>
+
+                                    {% elif day.status == 'holiday' %}
+
+                                        <div class="day-status">
+
+                                            <i class="fas fa-gift"></i> H
+
+                                        </div>
+
+                                    {% elif day.status == 'absent' %}
+
+                                        <div class="day-status">
+
+                                            <i class="fas fa-times-circle"></i> A
+
+                                        </div>
+
+                                    {% endif %}
+
+                                {% endif %}
+
+                            </td>
+
+                            {% endfor %}
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- Summary Stats -->
+
+            <div class="row mt-4 g-3">
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <div class="stat-box stat-present">
+
+                        <i class="fas fa-check-circle stat-icon"></i>
+
+                        <h3 class="mb-0 counter">{{ report.present_count }}</h3>
+
+                        <small>Present Days</small>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <div class="stat-box stat-late">
+
+                        <i class="fas fa-clock stat-icon"></i>
+
+                        <h3 class="mb-0 counter">{{ report.late_count }}</h3>
+
+                        <small>Late Days</small>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <div class="stat-box stat-absent">
+
+                        <i class="fas fa-times-circle stat-icon"></i>
+
+                        <h3 class="mb-0 counter">{{ report.absent_count }}</h3>
+
+                        <small>Absent Days</small>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-2">
+
+                    <div class="stat-box stat-total">
+
+                        <i class="fas fa-calendar-day stat-icon"></i>
+
+                        <h3 class="mb-0 counter">{{ report.total_days }}</h3>
+
+                        <small>Total Days</small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% empty %}
+
+    <div class="alert alert-info animate-fade">
+
+        <i class="fas fa-info-circle"></i> No employees found.
+
+    </div>
+
+    {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<style>
+
+    /* Content Wrapper Override */
+
+    .content-wrapper {
+
+        background-color: white !important;
+
+    }
+
+
+
+    @keyframes slideDown {
+
+        from {
+
+            opacity: 0;
+
+            transform: translateY(-20px);
+
+        }
+
+        to {
+
+            opacity: 1;
+
+            transform: translateY(0);
+
+        }
+
+    }
+
+
+
+    @keyframes fadeIn {
+
+        from { opacity: 0; }
+
+        to { opacity: 1; }
+
+    }
+
+
+
+    @keyframes pulse {
+
+        0%, 100% { transform: scale(1); }
+
+        50% { transform: scale(1.05); }
+
+    }
+
+
+
+    .animate-title {
+
+        animation: slideDown 0.5s ease-out;
+
+        background: linear-gradient(90deg, #ff8c5a, #ff6b35);
+
+        -webkit-background-clip: text;
+
+        -webkit-text-fill-color: transparent;
+
+        background-clip: text;
+
+    }
+
+
+
+    .filter-card {
+
+        animation: fadeIn 0.6s ease-out;
+
+        border: none;
+
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
+        border-radius: 15px;
+
+    }
+
+
+
+    .btn-gradient {
+
+        background: linear-gradient(90deg, #ff8c5a, #ff6b35);
+
+        border: none;
+
+        color: white;
+
+        font-weight: bold;
+
+        transition: all 0.3s;
+
+    }
+
+
+
+    .btn-gradient:hover {
+
+        transform: translateY(-2px);
+
+        box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+
+        color: white;
+
+    }
+
+
+
+    .pulse-btn {
+
+        animation: pulse 2s infinite;
+
+    }
+
+
+
+    .legend-card {
+
+        border: none;
+
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
+        border-radius: 15px;
+
+        animation: fadeIn 0.7s ease-out;
+
+    }
+
+
+
+    .legend-item {
+
+        font-size: 16px;
+
+        font-weight: 500;
+
+    }
+
+
+
+    .badge-present {
+
+        background-color: #4CAF50;
+
+        padding: 8px 12px;
+
+        font-size: 14px;
+
+        color: white;
+
+    }
+
+
+
+    .badge-late {
+
+        background-color: #FF9800;
+
+        color: white;
+
+        padding: 8px 12px;
+
+        font-size: 14px;
+
+    }
+
+
+
+    .badge-absent {
+
+        background-color: #FF6B6B;
+
+        padding: 8px 12px;
+
+        font-size: 14px;
+
+        color: white;
+
+    }
+
+
+
+    .badge-week-off {
+
+        background-color: #9E9E9E;
+
+        padding: 8px 12px;
+
+        font-size: 14px;
+
+        color: white;
+
+    }
+
+
+
+    .badge-holiday {
+
+        background-color: #9C27B0;
+
+        padding: 8px 12px;
+
+        font-size: 14px;
+
+        color: white;
+
+    }
+
+
+
+    .employee-card {
+
+        border: none;
+
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+
+        border-radius: 15px;
+
+        overflow: hidden;
+
+        animation: slideDown 0.6s ease-out;
+
+        transition: all 0.3s;
+
+    }
+
+
+
+    .employee-card:hover {
+
+        transform: translateY(-5px);
+
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+
+    }
+
+
+
+    .card-header-gradient {
+
+        background: linear-gradient(90deg, #ff8c5a, #ff6b35);
+
+        padding: 20px;
+
+    }
+
+
+
+    .employee-photo {
+
+        width: 60px;
+
+        height: 60px;
+
+        border-radius: 50%;
+
+        border: 3px solid white;
+
+        object-fit: cover;
+
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+        animation: fadeIn 0.8s ease-out;
+
+    }
+
+
+
+    .calendar-table {
+
+        margin-top: 20px;
+
+        font-size: 12px;
+
+    }
+
+
+
+    .calendar-header th {
+
+        background: linear-gradient(90deg, #ff8c5a, #ff6b35);
+
+        color: white;
+
+        padding: 8px 4px;
+
+        font-weight: bold;
+
+        border: none;
+
+        font-size: 12px;
+
+    }
+
+
+
+    .calendar-day {
+
+        height: 60px;
+
+        width: 14%;
+
+        vertical-align: top;
+
+        padding: 5px 3px;
+
+        position: relative;
+
+        transition: all 0.3s;
+
+        cursor: pointer;
+
+    }
+
+
+
+    .calendar-day:hover {
+
+        transform: scale(1.05);
+
+        z-index: 10;
+
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+    }
+
+
+
+    .day-present {
+
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+
+        color: white;
+
+    }
+
+
+
+    .day-late {
+
+        background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+
+        color: white;
+
+    }
+
+
+
+    .day-absent {
+
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8787 100%);
+
+        color: white;
+
+    }
+
+
+
+    .day-week-off {
+
+        background: linear-gradient(135deg, #9E9E9E 0%, #BDBDBD 100%);
+
+        color: white;
+
+    }
+
+
+
+    .day-holiday {
+
+        background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);
+
+        color: white;
+
+    }
+
+
+
+    .day-number {
+
+        font-size: 14px;
+
+        font-weight: bold;
+
+        margin-bottom: 2px;
+
+    }
+
+
+
+    .day-status {
+
+        font-weight: bold;
+
+        font-size: 11px;
+
+        margin: 2px 0;
+
+    }
+
+
+
+    .day-status i {
+
+        margin-right: 1px;
+
+        font-size: 9px;
+
+    }
+
+
+
+    .day-time {
+
+        display: block;
+
+        font-size: 9px;
+
+        color: rgba(255, 255, 255, 0.9);
+
+        margin-top: 1px;
+
+        font-weight: 500;
+
+    }
+
+
+
+    .stat-box {
+
+        text-align: center;
+
+        padding: 20px;
+
+        border-radius: 12px;
+
+        transition: all 0.3s;
+
+        position: relative;
+
+        overflow: hidden;
+
+    }
+
+
+
+    .stat-box:hover {
+
+        transform: translateY(-5px);
+
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+
+    }
+
+
+
+    .stat-present {
+
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+
+        color: white;
+
+    }
+
+
+
+    .stat-late {
+
+        background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+
+        color: white;
+
+    }
+
+
+
+    .stat-absent {
+
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8787 100%);
+
+        color: white;
+
+    }
+
+
+
+    .stat-total {
+
+        background: linear-gradient(90deg, #ff8c5a, #ff6b35);
+
+        color: white;
+
+    }
+
+
+
+    .stat-icon {
+
+        font-size: 24px;
+
+        margin-bottom: 8px;
+
+        opacity: 0.8;
+
+    }
+
+
+
+    .counter {
+
+        font-size: 32px;
+
+        font-weight: bold;
+
+        animation: fadeIn 1s ease-out;
+
+    }
+
+
+
+    .stat-box small {
+
+        font-size: 13px;
+
+    }
+
+
+
+    .animate-fade {
+
+        animation: fadeIn 0.8s ease-out;
+
+    }
+
+
+
+    @media (max-width: 768px) {
+
+        .employee-photo {
+
+            width: 50px;
+
+            height: 50px;
+
+        }
+
+        
+
+        .calendar-day {
+
+            height: 50px;
+
+            padding: 3px 2px;
+
+        }
+
+        
+
+        .day-number {
+
+            font-size: 12px;
+
+        }
+
+
+
+        .day-status {
+
+            font-size: 10px;
+
+        }
+
+
+
+        .day-time {
+
+            font-size: 8px;
+
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+

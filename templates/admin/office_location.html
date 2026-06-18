@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Office Location Settings{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4">
+
+                <i class="bi bi-geo-alt-fill"></i> Office Location Settings (GeoFence)
+
+            </h2>
+
+            
+
+            <div class="row">
+
+                <div class="col-12 col-md-8">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-gear"></i> Configure Office Location
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+                                
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">Office Name *</label>
+
+                                    {{ form.name }}
+
+                                    {% if form.name.errors %}
+
+                                        <div class="text-danger small">{{ form.name.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">Latitude *</label>
+
+                                        {{ form.latitude }}
+
+                                        {% if form.latitude.errors %}
+
+                                            <div class="text-danger small">{{ form.latitude.errors }}</div>
+
+                                        {% endif %}
+
+                                        <div class="form-text">Example: 28.7041</div>
+
+                                    </div>
+
+                                    
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">Longitude *</label>
+
+                                        {{ form.longitude }}
+
+                                        {% if form.longitude.errors %}
+
+                                            <div class="text-danger small">{{ form.longitude.errors }}</div>
+
+                                        {% endif %}
+
+                                        <div class="form-text">Example: 77.1025</div>
+
+                                    </div>
+
+                                </div>
+
+                                
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">Allowed Radius (meters) *</label>
+
+                                    {{ form.radius }}
+
+                                    {% if form.radius.errors %}
+
+                                        <div class="text-danger small">{{ form.radius.errors }}</div>
+
+                                    {% endif %}
+
+                                    <div class="form-text">Employees must be within this radius to mark attendance</div>
+
+                                </div>
+
+                                
+
+                                <div class="mb-3 form-check">
+
+                                    {{ form.is_active }}
+
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+
+                                        Active
+
+                                    </label>
+
+                                    {% if form.is_active.errors %}
+
+                                        <div class="text-danger small">{{ form.is_active.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <button type="submit" class="btn btn-primary">
+
+                                    <i class="bi bi-check-circle"></i> Save Settings
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <!-- Current Settings -->
+
+                    {% if office_location %}
+
+                    <div class="card mb-3">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-info-circle"></i> Current Settings
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <p><strong>Name:</strong> {{ office_location.name }}</p>
+
+                            <p><strong>Latitude:</strong> {{ office_location.latitude }}</p>
+
+                            <p><strong>Longitude:</strong> {{ office_location.longitude }}</p>
+
+                            <p><strong>Radius:</strong> {{ office_location.radius }}m</p>
+
+                            <p><strong>Status:</strong> 
+
+                                {% if office_location.is_active %}
+
+                                    <span class="badge bg-success">Active</span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">Inactive</span>
+
+                                {% endif %}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+                    
+
+                    <!-- Help Card -->
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-question-circle"></i> How to Get Coordinates
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <ol class="small">
+
+                                <li>Open Google Maps</li>
+
+                                <li>Right-click on your office location</li>
+
+                                <li>Click on the coordinates (first option)</li>
+
+                                <li>Coordinates will be copied</li>
+
+                                <li>Paste here (format: lat, long)</li>
+
+                            </ol>
+
+                            
+
+                            <div class="alert alert-info small mt-3">
+
+                                <strong>Example:</strong><br>
+
+                                Latitude: 28.7041<br>
+
+                                Longitude: 77.1025<br>
+
+                                Radius: 200 (meters)
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

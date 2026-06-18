@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Holiday Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+                {% include "admin/includes/sidebar.html" %}
+        
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-calendar-event"></i> Holiday Management</h2>
+                <a href="{% url 'holiday_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Holiday
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    {% if holidays %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Holiday Name</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Total Days</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for holiday in holidays %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ holiday.name }}</strong>
+                                        {% if holiday.description %}
+                                        <br><small class="text-muted">{{ holiday.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ holiday.start_date|date:"d M, Y" }}</td>
+                                    <td>{{ holiday.end_date|date:"d M, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ holiday.get_total_days }} day{{ holiday.get_total_days|pluralize }}</span>
+                                    </td>
+                                    <td>
+                                        {% if holiday.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'holiday_edit' holiday.pk %}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <a href="{% url 'holiday_delete' holiday.pk %}" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-event" style="font-size: 4rem; color: #ccc;"></i>
+                        <h4 class="mt-3 text-muted">No Holidays Added</h4>
+                        <p class="text-muted">Click "Add New Holiday" to create your first holiday</p>
+                        <a href="{% url 'holiday_create' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-circle"></i> Add Holiday
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-info-circle"></i> Holiday Management Info
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">How Holidays Work:</h6>
+                    <ul>
+                        <li><strong>Holidays are NOT counted as absent</strong> - No penalty applied</li>
+                        <li><strong>Employees don't need to punch in/out</strong> on holidays</li>
+                        <li><strong>Salary is NOT deducted</strong> for holiday days</li>
+                        <li><strong>Multi-day holidays supported</strong> (e.g., Diwali 3 days)</li>
+                        <li><strong>Can be activated/deactivated</strong> anytime</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6 class="text-success">Examples:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Republic Day:</strong> 26 Jan (1 day)</li>
+                        <li><strong>Diwali:</strong> 10 Nov to 12 Nov (3 days)</li>
+                        <li><strong>Christmas:</strong> 25 Dec (1 day)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

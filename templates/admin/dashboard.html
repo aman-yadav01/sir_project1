@@ -1,0 +1,952 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== BIRTHDAY STYLES - ADMIN ===== */
+.birthday-alert {
+    background: linear-gradient(135deg, #f953c6 0%, #b91d73 50%, #7c3aed 100%);
+    border: none;
+    border-radius: 18px;
+    color: white;
+    padding: 20px 24px;
+    box-shadow: 0 8px 32px rgba(249,83,198,0.5);
+    animation: birthdayPulse 2s infinite;
+    position: relative;
+    overflow: hidden;
+}
+.birthday-alert::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    animation: shimmer 3s linear infinite;
+}
+.birthday-alert-upcoming {
+    background: linear-gradient(135deg, #f5a623 0%, #f76b1c 50%, #e53e3e 100%);
+    border: none;
+    border-radius: 18px;
+    color: white;
+    padding: 18px 22px;
+    box-shadow: 0 6px 24px rgba(245,166,35,0.45);
+    position: relative;
+    overflow: hidden;
+}
+.birthday-emp-chip {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,0.22);
+    border-radius:30px;
+    padding:5px 16px 5px 5px;
+    margin:3px;
+    font-weight:600;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3);
+    transition: transform 0.2s;
+}
+.birthday-emp-chip:hover { transform: scale(1.05); }
+.birthday-emp-chip img {
+    width:34px; height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid white;
+}
+.birthday-title-big {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.days-badge {
+    background: rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+/* Admin birthday confetti canvas */
+#adminBirthdayCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 99999;
+}
+
+/* Flash overlay */
+#adminPartyFlash {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    background: white;
+    z-index: 99998;
+    pointer-events: none;
+    opacity: 0;
+    animation: adminScreenFlash 0.15s ease-out 0.1s 3;
+}
+@keyframes adminScreenFlash {
+    0%   { opacity: 0.85; }
+    100% { opacity: 0; }
+}
+
+/* Shockwave rings */
+#adminShockwaveContainer {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    z-index: 99997;
+    pointer-events: none;
+    overflow: hidden;
+}
+.admin-shockwave {
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.9);
+    transform: translate(-50%, -50%) scale(0);
+    animation: adminShockwaveAnim 1s ease-out forwards;
+}
+@keyframes adminShockwaveAnim {
+    0%   { transform: translate(-50%,-50%) scale(0);  opacity:1;  border-width:6px; }
+    60%  { opacity:0.6; }
+    100% { transform: translate(-50%,-50%) scale(8);  opacity:0;  border-width:1px; }
+}
+
+/* Birthday popup */
+#adminBirthdayPopup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 100001;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    border-radius: 28px;
+    padding: 44px 56px;
+    color: white;
+    text-align: center;
+    pointer-events: all;
+    max-width: 500px;
+    width: 92%;
+    animation: adminNuclearPopup 0.7s cubic-bezier(0.175,0.885,0.32,1.8) 0.5s forwards;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow:
+        0 0 0 4px rgba(249,83,198,0.4),
+        0 0 60px rgba(249,83,198,0.6),
+        0 0 120px rgba(124,58,237,0.4),
+        0 30px 80px rgba(0,0,0,0.7);
+}
+#adminBirthdayPopup::before {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #f953c6, #7c3aed, #38ef7d, #f5a623, #f953c6);
+    background-size: 300% 300%;
+    animation: adminRainbowBorder 2s linear infinite;
+    z-index: -1;
+    filter: blur(3px);
+}
+@keyframes adminRainbowBorder {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+@keyframes adminNuclearPopup {
+    0%   { transform: translate(-50%,-50%) scale(0) rotate(-15deg); opacity:0; }
+    60%  { transform: translate(-50%,-50%) scale(1.1) rotate(3deg);  opacity:1; }
+    80%  { transform: translate(-50%,-50%) scale(0.96) rotate(-1deg); }
+    100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); opacity:1; }
+}
+#adminBirthdayPopup .admin-close-btn {
+    position: absolute; top:14px; right:18px;
+    font-size:1.6rem; cursor:pointer;
+    background:none; border:none; color:rgba(255,255,255,0.7);
+    transition: color 0.2s, transform 0.2s;
+    line-height:1;
+}
+#adminBirthdayPopup .admin-close-btn:hover { color:white; transform:rotate(90deg) scale(1.2); }
+.admin-cake-wrap {
+    font-size: 5.5rem; display:block; margin-bottom:10px;
+    animation: adminCakeBoom 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.2s both,
+               adminCakeFloat 2s ease-in-out 1.8s infinite alternate;
+    filter: drop-shadow(0 0 20px rgba(249,83,198,0.8));
+}
+@keyframes adminCakeBoom {
+    0%   { transform: scale(0) rotate(-20deg); }
+    70%  { transform: scale(1.3) rotate(8deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes adminCakeFloat {
+    from { transform: translateY(0) rotate(-4deg); }
+    to   { transform: translateY(-14px) rotate(4deg); }
+}
+.admin-popup-title {
+    font-size: 2.2rem; font-weight: 900;
+    background: linear-gradient(135deg, #f953c6, #fff200, #38ef7d);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 6px;
+    animation: adminTitleGlow 1.5s ease-in-out infinite alternate;
+    letter-spacing: 1px;
+}
+@keyframes adminTitleGlow {
+    from { filter: brightness(1); }
+    to   { filter: brightness(1.4) drop-shadow(0 0 10px #f953c6); }
+}
+.admin-emp-name-pill {
+    display: inline-flex; align-items:center; gap:10px;
+    background: linear-gradient(135deg, #f953c6, #7c3aed);
+    border-radius: 50px; padding: 8px 22px 8px 12px;
+    font-weight: 800; font-size: 1.05rem; margin: 6px 4px;
+    box-shadow: 0 4px 20px rgba(249,83,198,0.5);
+    animation: adminPillPulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes adminPillPulse {
+    from { box-shadow: 0 4px 20px rgba(249,83,198,0.5); }
+    to   { box-shadow: 0 6px 35px rgba(249,83,198,0.9); }
+}
+.admin-emoji-row {
+    font-size: 2rem; margin: 16px 0;
+    animation: adminEmojiDance 0.5s ease-in-out infinite alternate;
+    display: block; letter-spacing: 6px;
+}
+@keyframes adminEmojiDance {
+    from { transform: rotate(-3deg) scale(1); }
+    to   { transform: rotate(3deg) scale(1.08); }
+}
+.admin-party-btn {
+    background: linear-gradient(135deg, #f953c6, #f5a623);
+    color: white; border: none; border-radius: 50px;
+    padding: 14px 40px; font-size: 1.1rem; font-weight: 900;
+    cursor: pointer; letter-spacing: 1px;
+    box-shadow: 0 8px 30px rgba(249,83,198,0.6);
+    text-transform: uppercase;
+    animation: adminBtnBounce 0.8s ease-in-out infinite alternate;
+}
+@keyframes adminBtnBounce {
+    from { transform: scale(1); }
+    to   { transform: scale(1.04); }
+}
+.admin-party-btn:hover { transform: scale(1.1) !important; }
+@keyframes birthdayPulse {
+    0%,100% { box-shadow: 0 8px 32px rgba(249,83,198,0.5); transform: scale(1); }
+    50%      { box-shadow: 0 12px 48px rgba(249,83,198,0.8); transform: scale(1.005); }
+}
+@keyframes shimmer {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4">Dashboard Overview</h2>
+
+            <!-- ===== TODAY'S BIRTHDAYS - ADMIN NUCLEAR BLAST ===== -->
+            {% if todays_birthdays %}
+            <!-- Screen flash -->
+            <div id="adminPartyFlash"></div>
+            <!-- Shockwave rings -->
+            <div id="adminShockwaveContainer"></div>
+            <!-- Confetti + fireworks canvas -->
+            <canvas id="adminBirthdayCanvas"></canvas>
+
+            <!-- Birthday Popup -->
+            <div id="adminBirthdayPopup">
+                <button class="admin-close-btn" onclick="closeAdminBirthdayParty()">✕</button>
+                <span class="admin-cake-wrap">🎂</span>
+                <div class="admin-popup-title">HAPPY BIRTHDAY!</div>
+                <div style="margin:6px 0;opacity:0.9;font-size:0.95rem;letter-spacing:1px;">
+                    {% if todays_birthdays|length > 1 %}
+                        🎊 TEAM KE STARS KO BADHAI! 🎊
+                    {% else %}
+                        🎊 WISHING YOU THE VERY BEST! 🎊
+                    {% endif %}
+                </div>
+                <div class="mt-2 mb-2">
+                    {% for emp in todays_birthdays %}
+                    <div class="admin-emp-name-pill">
+                        {% if emp.photo %}
+                            <img src="{{ emp.photo.url }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.7);" alt="">
+                        {% else %}
+                            <span style="font-size:1.6rem;">🎈</span>
+                        {% endif %}
+                        <div style="text-align:left;">
+                            <div style="font-weight:800;font-size:1rem;">{{ emp.full_name }}</div>
+                            <div style="font-size:0.72rem;opacity:0.85;">{{ emp.designation }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <span class="admin-emoji-row">🎉🎊🥳🎈🎁✨🌟💝🎵🎶🎺🥂</span>
+                <button class="admin-party-btn" onclick="closeAdminBirthdayParty()">
+                    💥 PARTY TIME! 💥
+                </button>
+            </div>
+
+            <!-- In-page banner -->
+            <div class="birthday-alert mb-4" style="position:relative;z-index:2;">
+                <div class="d-flex align-items-start gap-3 flex-wrap">
+                    <div style="font-size:3rem;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));">🎂</div>
+                    <div style="flex:1;">
+                        <div class="birthday-title-big mb-1">🎉 Aaj Birthday hai! Happy Birthday! 🎊</div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for emp in todays_birthdays %}
+                            <span class="birthday-emp-chip">
+                                {% if emp.photo %}
+                                    <img src="{{ emp.photo.url }}" alt="{{ emp.full_name }}">
+                                {% else %}
+                                    <span style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;">🎈</span>
+                                {% endif %}
+                                {{ emp.full_name }}
+                                <span style="font-size:0.75rem;opacity:0.85;">{{ emp.designation }}</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ===== UPCOMING BIRTHDAYS (2 din mein) - ADMIN ===== -->
+            {% if upcoming_birthdays %}
+            <div class="birthday-alert-upcoming mb-4">
+                <div class="d-flex align-items-start gap-3 flex-wrap">
+                    <div style="font-size:2.5rem;line-height:1;">🎁</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:800;font-size:1.05rem;text-shadow:0 1px 4px rgba(0,0,0,0.2);">⏰ Aane waala Birthday — Admin Alert!</div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for emp in upcoming_birthdays %}
+                            <span class="birthday-emp-chip">
+                                {% if emp.photo %}
+                                    <img src="{{ emp.photo.url }}" alt="{{ emp.full_name }}">
+                                {% else %}
+                                    <span style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;">🎈</span>
+                                {% endif %}
+                                {{ emp.full_name }}
+                                <span class="days-badge">{{ emp.days_until_birthday }} din baad</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            
+
+            <!-- Statistics Cards -->
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card primary" style="animation-delay: 0.1s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">Total Employees</h6>
+
+                                    <h2 class="mb-0">{{ total_employees }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-people text-primary" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card success" style="animation-delay: 0.2s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">Present Today</h6>
+
+                                    <h2 class="mb-0">{{ present_today }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-check-circle text-success" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card danger" style="animation-delay: 0.3s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">Absent Today</h6>
+
+                                    <h2 class="mb-0">{{ absent_today }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-x-circle text-danger" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card warning" style="animation-delay: 0.4s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">Late Today</h6>
+
+                                    <h2 class="mb-0">{{ late_today }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-clock text-warning" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card info" style="animation-delay: 0.5s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">On Leave</h6>
+
+                                    <h2 class="mb-0">{{ on_leave_today }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-calendar-x text-info" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card stat-card warning" style="animation-delay: 0.6s;">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <h6 class="text-muted mb-1">Pending Leaves</h6>
+
+                                    <h2 class="mb-0">{{ pending_leaves }}</h2>
+
+                                </div>
+
+                                <i class="bi bi-envelope text-warning" style="font-size: 2.5rem;"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Monthly Payroll -->
+
+            <div class="row mb-4">
+
+                <div class="col-12">
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+
+                                <i class="bi bi-cash-stack"></i> Total Monthly Payroll
+
+                            </h5>
+
+                            <h2 class="text-success">₹{{ total_payroll|floatformat:2 }}</h2>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Recent Attendance -->
+
+            <div class="row">
+
+                <div class="col-12 col-md-8">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-clock-history"></i> Today's Attendance
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-hover">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>Employee</th>
+
+                                            <th>Punch In</th>
+
+                                            <th>Status</th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for att in recent_attendance %}
+
+                                        <tr>
+
+                                            <td>{{ att.employee.full_name }}</td>
+
+                                            <td>{{ att.punch_in|date:"h:i A" }}</td>
+
+                                            <td>
+
+                                                {% if att.status == 'present' %}
+
+                                                    <span class="badge bg-success">Present</span>
+
+                                                {% elif att.status == 'late' %}
+
+                                                    <span class="badge bg-warning">Late</span>
+
+                                                {% endif %}
+
+                                            </td>
+
+                                        </tr>
+
+                                        {% empty %}
+
+                                        <tr>
+
+                                            <td colspan="3" class="text-center text-muted">No attendance today</td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-envelope-exclamation"></i> Pending Leave Requests
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% for leave in pending_leave_requests %}
+
+                            <div class="mb-3 pb-3 border-bottom">
+
+                                <strong>{{ leave.employee.full_name }}</strong>
+
+                                <div class="small text-muted">
+
+                                    {{ leave.start_date }} to {{ leave.end_date }}
+
+                                </div>
+
+                                <a href="{% url 'leave_review' leave.pk %}" class="btn btn-sm btn-primary mt-2">
+
+                                    Review
+
+                                </a>
+
+                            </div>
+
+                            {% empty %}
+
+                            <p class="text-muted text-center">No pending requests</p>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if todays_birthdays %}
+<script>
+// ===== ADMIN NUCLEAR BIRTHDAY PARTY BLAST =====
+(function() {
+    const canvas = document.getElementById('adminBirthdayCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = [
+        '#f953c6','#ff6b00','#fff200',
+        '#38ef7d','#7c3aed','#ff4d4d',
+        '#ffe66d','#00f260','#ffffff'
+    ];
+    const EMOJIS = ['🎂','🎉','🎈','🎁','✨','🥳','🎊','💝','🍰'];
+    let particles = [];
+    let rockets   = [];
+    let animId    = null;
+    let running   = true;
+    const MAX_PARTICLES = 150;
+
+    function rnd(a, b)    { return a + Math.random() * (b - a); }
+    function rndInt(a, b) { return Math.floor(rnd(a, b)); }
+    function rndColor()   { return COLORS[rndInt(0, COLORS.length)]; }
+    function rndEmoji()   { return EMOJIS[rndInt(0, EMOJIS.length)]; }
+
+    function spawnParticle(x, y, vx, vy, opts) {
+        particles.push({
+            x, y, vx, vy,
+            gravity:   opts.gravity   ?? rnd(0.2, 0.55),
+            size:      opts.size      ?? rnd(5, 14),
+            color:     opts.color     ?? rndColor(),
+            emoji:     opts.emoji     ?? null,
+            rotation:  rnd(0, Math.PI * 2),
+            rotSpeed:  rnd(-0.25, 0.25),
+            opacity:   opts.opacity   ?? 1,
+            fade:      opts.fade      ?? rnd(0.004, 0.012),
+            shape:     opts.shape     ?? ['rect','circle','star','ribbon','heart','diamond'][rndInt(0,6)],
+            scaleX:    rnd(0.3, 1),
+            wobble:    rnd(0, Math.PI * 2),
+            wobbleAmp: rnd(0.3, 1.2),
+            wobbleSpd: rnd(0.03, 0.12),
+            glow:      opts.glow      ?? false,
+        });
+    }
+
+    function burst(x, y, count, extra) {
+        for (let i = 0; i < count; i++) {
+            const angle   = rnd(0, Math.PI * 2);
+            const speed   = rnd(2, extra?.maxSpeed ?? 18);
+            const isEmoji = Math.random() < (extra?.emojiFrac ?? 0.2);
+            spawnParticle(x, y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed - rnd(0, 4),
+                {
+                    size:  isEmoji ? rnd(22, 42) : rnd(4, 18),
+                    emoji: isEmoji ? rndEmoji() : null,
+                    color: rndColor(),
+                    glow:  Math.random() < 0.25,
+                    shape: ['rect','circle','star','ribbon','heart','diamond'][rndInt(0,6)],
+                    gravity: rnd(0.2, 0.6),
+                    fade:    rnd(0.004, 0.01),
+                    ...(extra?.particleOpts ?? {}),
+                }
+            );
+        }
+    }
+
+    function launchRocket(startX) {
+        rockets.push({
+            x: startX ?? rnd(W * 0.1, W * 0.9),
+            y: H + 10,
+            vy: rnd(-18, -22),
+            vx: rnd(-2, 2),
+            targetY: rnd(H * 0.05, H * 0.45),
+            color: rndColor(),
+            trail: [],
+            exploded: false,
+        });
+    }
+
+    function spawnShockwave(cx, cy, color) {
+        const container = document.getElementById('adminShockwaveContainer');
+        if (!container) return;
+        const ring = document.createElement('div');
+        ring.className = 'admin-shockwave';
+        const size = rnd(60, 140);
+        ring.style.cssText = `
+            left:${cx}px; top:${cy}px;
+            width:${size}px; height:${size}px;
+            border-color:${color};
+            animation-duration:${rnd(0.7, 1.1)}s;
+        `;
+        container.appendChild(ring);
+        setTimeout(() => ring.remove(), 1200);
+    }
+
+    function screenShake(intensity, duration) {
+        const body = document.body;
+        const start = Date.now();
+        function shake() {
+            if (Date.now() - start > duration) { body.style.transform = ''; return; }
+            body.style.transform = `translate(${rnd(-intensity, intensity)}px,${rnd(-intensity, intensity)}px)`;
+            requestAnimationFrame(shake);
+        }
+        shake();
+    }
+
+    function draw() {
+        if (!running) return;
+        ctx.clearRect(0, 0, W, H);
+
+        // Rockets
+        for (let i = rockets.length - 1; i >= 0; i--) {
+            const r = rockets[i];
+            if (r.exploded) { rockets.splice(i, 1); continue; }
+            r.trail.push({x: r.x, y: r.y});
+            if (r.trail.length > 10) r.trail.shift();
+            for (let t = 0; t < r.trail.length; t++) {
+                ctx.save();
+                ctx.globalAlpha = (t / r.trail.length) * 0.6;
+                ctx.fillStyle = r.color;
+                ctx.beginPath();
+                ctx.arc(r.trail[t].x, r.trail[t].y, 2 * (t/r.trail.length), 0, Math.PI*2);
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(r.x, r.y, 4, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+            r.x += r.vx; r.y += r.vy; r.vy += 0.5;
+            if (r.y <= r.targetY) {
+                r.exploded = true;
+                burst(r.x, r.y, 28, { maxSpeed:14, emojiFrac:0.2 });
+                spawnShockwave(r.x, r.y, r.color);
+                screenShake(4, 150);
+            }
+        }
+
+        // Particles — only rect/circle, no glow, fast fade
+        particles = particles.filter(p => p.opacity > 0.02 && p.y < H + 60);
+        for (const p of particles) {
+            p.wobble  += p.wobbleSpd;
+            p.x       += p.vx + Math.sin(p.wobble) * p.wobbleAmp;
+            p.y       += p.vy;
+            p.vy      += p.gravity;
+            p.vx      *= 0.995;
+            p.rotation += p.rotSpeed;
+            p.opacity -= p.fade;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+
+            if (p.emoji) {
+                ctx.font = `${p.size}px serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(p.emoji, 0, 0);
+            } else {
+                ctx.fillStyle = p.color;
+                ctx.scale(p.scaleX, 1);
+                const r = p.size / 2;
+                if (p.shape === 'rect') { ctx.fillRect(-r, -r/2, p.size, p.size/2); }
+                else { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill(); }
+            }
+            ctx.restore();
+        }
+        animId = requestAnimationFrame(draw);
+    }
+
+    function confettiRain() {
+        for (let i = 0; i < 5; i++) {
+            const isEmoji = Math.random() < 0.2;
+            spawnParticle(rnd(0,W), rnd(-40,-5), rnd(-1.5,1.5), rnd(2,6), {
+                gravity:0.05, size: isEmoji?rnd(14,22):rnd(5,10),
+                emoji: isEmoji?rndEmoji():null, fade:0.014, opacity:rnd(0.7,1),
+            });
+        }
+    }
+
+    function megaBlast() {
+        const points = [
+            [W*0.2, H*0.25], [W*0.5, H*0.15],
+            [W*0.8, H*0.25], [W*0.5, H*0.5],
+        ];
+        points.forEach(([x,y]) => {
+            burst(x, y, 25, { maxSpeed:14, emojiFrac:0.2 });
+            spawnShockwave(x, y, rndColor());
+        });
+        screenShake(7, 300);
+    }
+
+    // START!
+    draw();
+    megaBlast();
+
+    setTimeout(() => {
+        launchRocket();
+        setTimeout(() => launchRocket(), 400);
+    }, 500);
+
+    const rocketTimer = setInterval(() => launchRocket(), 3000);
+    const rainTimer   = setInterval(confettiRain, 600);
+
+    const blastTimer = setInterval(() => {
+        const x = rnd(W*0.15, W*0.85);
+        const y = rnd(H*0.15, H*0.55);
+        burst(x, y, 20, { maxSpeed:12, emojiFrac:0.2 });
+        spawnShockwave(x, y, rndColor());
+        screenShake(3, 150);
+    }, 4000);
+
+    setTimeout(() => { clearInterval(rocketTimer); clearInterval(blastTimer); }, 10000);
+    setTimeout(() => { clearInterval(rainTimer); }, 15000);
+
+    window._adminStopParty = function() {
+        running = false;
+        clearInterval(rocketTimer);
+        clearInterval(rainTimer);
+        clearInterval(blastTimer);
+        cancelAnimationFrame(animId);
+        ctx.clearRect(0, 0, W, H);
+        document.body.style.transform = '';
+    };
+})();
+
+function closeAdminBirthdayParty() {
+    const popup = document.getElementById('adminBirthdayPopup');
+    if (popup) {
+        popup.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        popup.style.transform  = 'translate(-50%,-50%) scale(0)';
+        popup.style.opacity    = '0';
+        setTimeout(() => popup.remove(), 350);
+    }
+    setTimeout(() => {
+        if (window._adminStopParty) window._adminStopParty();
+        const canvas = document.getElementById('adminBirthdayCanvas');
+        if (canvas) {
+            canvas.style.transition = 'opacity 1.5s';
+            canvas.style.opacity = '0';
+            setTimeout(() => canvas.remove(), 1600);
+        }
+        const sw = document.getElementById('adminShockwaveContainer');
+        if (sw) sw.remove();
+        document.body.style.transform = '';
+    }, 3000);
+}
+</script>
+{% endif %}
+{% endblock %}
+

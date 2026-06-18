@@ -1,0 +1,572 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Employee List{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== BIRTHDAY BANNER FOR EMPLOYEE PANEL ===== */
+.emp-panel-birthday-banner {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #f953c6 100%);
+    border-radius: 18px;
+    color: white;
+    padding: 20px 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(249,83,198,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: panelBannerGlow 2s ease-in-out infinite alternate;
+}
+@keyframes panelBannerGlow {
+    from { box-shadow: 0 10px 40px rgba(249,83,198,0.5); }
+    to   { box-shadow: 0 14px 55px rgba(249,83,198,0.8); }
+}
+.emp-panel-birthday-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+        45deg, transparent, transparent 10px,
+        rgba(255,255,255,0.04) 10px, rgba(255,255,255,0.04) 20px
+    );
+}
+.emp-panel-banner-sparkle {
+    position: absolute;
+    font-size: 1.3rem;
+    animation: panelSparkleFly 3s ease-in-out infinite;
+    opacity: 0.7;
+}
+@keyframes panelSparkleFly {
+    0%,100% { transform: translateY(0) rotate(0deg); opacity:0.7; }
+    50%     { transform: translateY(-18px) rotate(180deg); opacity:1; }
+}
+.panel-bday-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50px;
+    padding: 6px 18px 6px 6px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: transform 0.2s;
+}
+.panel-bday-chip:hover { transform: scale(1.06); }
+.panel-bday-chip img {
+    width: 40px; height: 40px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.8);
+    box-shadow: 0 0 12px rgba(249,83,198,0.5);
+}
+/* Upcoming banner */
+.emp-panel-upcoming-banner {
+    background: linear-gradient(135deg, #f5a623 0%, #f76b1c 50%, #e53e3e 100%);
+    border-radius: 16px;
+    color: white;
+    padding: 16px 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(245,166,35,0.4);
+}
+/* Birthday badge in table row */
+.birthday-badge-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #f953c6, #7c3aed);
+    color: white;
+    border-radius: 20px;
+    padding: 2px 12px 2px 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    animation: badgeGlow 1.5s ease-in-out infinite alternate;
+}
+@keyframes badgeGlow {
+    from { box-shadow: 0 0 8px rgba(249,83,198,0.4); }
+    to   { box-shadow: 0 0 18px rgba(249,83,198,0.8); }
+}
+/* Confetti canvas for employee panel */
+#panelBirthdayCanvas {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    pointer-events: none;
+    z-index: 9998;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-people"></i> Employee Management</h2>
+
+                <a href="{% url 'employee_add' %}" class="btn btn-primary">
+
+                    <i class="bi bi-plus-circle"></i> Add Employee
+
+                </a>
+
+            </div>
+
+            <!-- ===== BIRTHDAY BANNER - TODAY ===== -->
+            {% if todays_birthdays %}
+            <canvas id="panelBirthdayCanvas"></canvas>
+            <div class="emp-panel-birthday-banner mb-4" style="position:relative;z-index:2;">
+                <span class="emp-panel-banner-sparkle" style="top:8%;left:4%;animation-delay:0s;">✨</span>
+                <span class="emp-panel-banner-sparkle" style="top:18%;right:6%;animation-delay:0.5s;">🌟</span>
+                <span class="emp-panel-banner-sparkle" style="bottom:12%;left:7%;animation-delay:1s;">💫</span>
+                <span class="emp-panel-banner-sparkle" style="bottom:8%;right:10%;animation-delay:0.3s;">🎊</span>
+                <div style="position:relative;z-index:2;">
+                    <div style="font-size:1.8rem;margin-bottom:8px;letter-spacing:4px;">🎂🎉🎈🎊🥳</div>
+                    <div style="font-size:1.2rem;font-weight:800;letter-spacing:1px;margin-bottom:10px;">
+                        🎉 Aaj Birthday hai! Happy Birthday! 🎊
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for emp in todays_birthdays %}
+                        <span class="panel-bday-chip">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo.url }}" alt="{{ emp.full_name }}">
+                            {% else %}
+                                <span style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;">🎈</span>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight:700;font-size:0.92rem;">{{ emp.full_name }}</div>
+                                <div style="font-size:0.72rem;opacity:0.85;">{{ emp.designation }}</div>
+                            </div>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ===== UPCOMING BIRTHDAYS BANNER ===== -->
+            {% if upcoming_birthdays %}
+            <div class="emp-panel-upcoming-banner mb-4">
+                <div style="position:relative;z-index:2;">
+                    <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">⏰ Aane waala Birthday!</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for emp in upcoming_birthdays %}
+                        <span class="panel-bday-chip" style="background:rgba(255,255,255,0.2);">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo.url }}" alt="{{ emp.full_name }}" style="width:34px;height:34px;">
+                            {% else %}
+                                <span style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;">🎁</span>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight:600;font-size:0.85rem;">{{ emp.full_name }}</div>
+                                <div style="font-size:0.7rem;opacity:0.8;">{{ emp.days_until_birthday }} din baad</div>
+                            </div>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Photo</th>
+
+                                    <th>Employee ID</th>
+
+                                    <th>Name</th>
+
+                                    <th>Designation</th>
+
+                                    <th>Email</th>
+
+                                    <th>Mobile</th>
+
+                                    <th>DOB</th>
+
+                                    <th>Salary</th>
+
+                                    <th>Shift</th>
+
+                                    <th>Status</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for emp in employees %}
+
+                                <tr class="{% if emp.is_birthday_today %}table-active{% endif %}">
+
+                                    <td>
+
+                                        {% if emp.photo %}
+
+                                            <img src="{{ emp.photo.url }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+
+                                        {% else %}
+
+                                            <i class="bi bi-person-circle" style="font-size: 40px;"></i>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>{{ emp.employee_id }}</td>
+
+                                    <td>
+                                        {{ emp.full_name }}
+                                        {% if emp.is_birthday_today %}
+                                        <span class="birthday-badge-cell">
+                                            🎂 B'DAY
+                                        </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ emp.designation }}</td>
+
+                                    <td>{{ emp.email }}</td>
+
+                                    <td>{{ emp.mobile_number }}</td>
+
+                                    <td>
+                                        {% if emp.date_of_birth %}
+                                            {{ emp.date_of_birth|date:"d M" }}
+                                        {% else %}
+                                            <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>₹{{ emp.base_salary }}</td>
+
+                                    <td>
+
+                                        {% if emp.shift %}
+
+                                            <div>
+
+                                                <span class="badge bg-primary">{{ emp.shift.get_name_display }}</span>
+
+                                                <br>
+
+                                                {% if emp.shift.is_active %}
+
+                                                    <span class="badge bg-success mt-1">Active</span>
+
+                                                {% else %}
+
+                                                    <span class="badge bg-secondary mt-1">Inactive</span>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">Not Assigned</span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+
+                                        <div class="form-check form-switch">
+
+                                            <input class="form-check-input status-toggle" 
+
+                                                   type="checkbox" 
+
+                                                   data-employee-id="{{ emp.id }}"
+
+                                                   {% if emp.is_active %}checked{% endif %}>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+
+                                        <a href="{% url 'employee_profile' emp.pk %}" class="btn btn-sm btn-info" title="View">
+
+                                            <i class="bi bi-eye"></i>
+
+                                        </a>
+
+                                        <a href="{% url 'employee_edit' emp.pk %}" class="btn btn-sm btn-warning" title="Edit">
+
+                                            <i class="bi bi-pencil"></i>
+
+                                        </a>
+
+                                        <a href="{% url 'employee_shift_assign' emp.pk %}" class="btn btn-sm btn-primary" title="Assign Shift">
+
+                                            <i class="bi bi-clock-history"></i>
+
+                                        </a>
+
+                                        <a href="{% url 'employee_delete' emp.pk %}" class="btn btn-sm btn-danger" title="Delete">
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                                {% empty %}
+
+                                <tr>
+
+                                    <td colspan="11" class="text-center text-muted">No employees found</td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+// Toggle employee status
+
+document.querySelectorAll('.status-toggle').forEach(toggle => {
+
+    toggle.addEventListener('change', function() {
+
+        const employeeId = this.dataset.employeeId;
+
+        const isActive = this.checked;
+
+        
+
+        fetch(`/admin/employee/${employeeId}/toggle-status/`, {
+
+            method: 'POST',
+
+            headers: {
+
+                'Content-Type': 'application/json',
+
+                'X-CSRFToken': '{{ csrf_token }}'
+
+            },
+
+            body: JSON.stringify({ is_active: isActive })
+
+        })
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            if (data.success) {
+
+                const alertDiv = document.createElement('div');
+
+                alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+
+                alertDiv.style.zIndex = '9999';
+
+                alertDiv.innerHTML = `
+
+                    <strong><i class="bi bi-check-circle"></i></strong> 
+
+                    Employee status updated successfully!
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+                `;
+
+                document.body.appendChild(alertDiv);
+
+                
+
+                setTimeout(() => {
+
+                    alertDiv.remove();
+
+                }, 3000);
+
+            } else {
+
+                this.checked = !isActive;
+
+                alert('Error updating status: ' + (data.error || 'Unknown error'));
+
+            }
+
+        })
+
+        .catch(error => {
+
+            this.checked = !isActive;
+
+            alert('Error updating status');
+
+            console.error('Error:', error);
+
+        });
+
+    });
+
+});
+
+{% if todays_birthdays %}
+// ===== PANEL BIRTHDAY CONFETTI =====
+(function() {
+    const canvas = document.getElementById('panelBirthdayCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = ['#f953c6','#ff0090','#ff6b00','#fff200','#38ef7d','#00d2ff','#7c3aed','#ff4d4d','#48cae4','#ffe66d'];
+    const EMOJIS = ['🎂','🎉','🎈','🎁','✨','🌟','🥳','🎊','💝','🍰'];
+    let particles = [];
+
+    function rnd(a,b) { return a + Math.random()*(b-a); }
+
+    function burst(x, y, count) {
+        for (let i = 0; i < count; i++) {
+            const isEmoji = Math.random() < 0.25;
+            particles.push({
+                x, y,
+                vx: rnd(-12, 12),
+                vy: rnd(-18, -4),
+                gravity: rnd(0.25, 0.5),
+                size: isEmoji ? rnd(18, 32) : rnd(5, 14),
+                color: COLORS[Math.floor(Math.random()*COLORS.length)],
+                emoji: isEmoji ? EMOJIS[Math.floor(Math.random()*EMOJIS.length)] : null,
+                rotation: rnd(0, Math.PI*2),
+                rotSpeed: rnd(-0.2, 0.2),
+                opacity: 1,
+                shape: ['rect','circle','star','ribbon'][Math.floor(Math.random()*4)],
+                scaleX: rnd(0.4, 1),
+                wobble: rnd(0, Math.PI*2),
+                wobbleSpeed: rnd(0.04, 0.14),
+            });
+        }
+    }
+
+    function drawStar(r) {
+        const pts = 5, step = Math.PI/pts;
+        let angle = -Math.PI/2;
+        ctx.beginPath();
+        for (let i = 0; i < pts*2; i++) {
+            const rad = i%2===0 ? r : r*0.42;
+            ctx.lineTo(Math.cos(angle)*rad, Math.sin(angle)*rad);
+            angle += step;
+        }
+        ctx.closePath();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles = particles.filter(p => p.opacity > 0.02 && p.y < canvas.height + 40);
+        for (const p of particles) {
+            p.wobble += p.wobbleSpeed;
+            p.x += p.vx + Math.sin(p.wobble) * 0.5;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.99;
+            p.rotation += p.rotSpeed;
+            p.opacity -= 0.007;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            if (p.emoji) {
+                ctx.font = p.size + 'px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.emoji, 0, 0);
+            } else {
+                ctx.fillStyle = p.color;
+                ctx.scale(p.scaleX, 1);
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+                } else if (p.shape === 'circle') {
+                    ctx.beginPath(); ctx.arc(0, 0, p.size/2, 0, Math.PI*2); ctx.fill();
+                } else if (p.shape === 'star') {
+                    drawStar(p.size/2); ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(-p.size/2, 0);
+                    ctx.quadraticCurveTo(0, -p.size/3, p.size/2, 0);
+                    ctx.quadraticCurveTo(0, p.size/3, -p.size/2, 0);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+        requestAnimationFrame(animate);
+    }
+
+    // Initial burst from multiple points
+    const points = [
+        [canvas.width*0.2, canvas.height*0.3],
+        [canvas.width*0.5, canvas.height*0.15],
+        [canvas.width*0.8, canvas.height*0.3],
+        [canvas.width*0.35, canvas.height*0.5],
+        [canvas.width*0.65, canvas.height*0.4],
+    ];
+    points.forEach(([x,y]) => burst(x, y, 50));
+    animate();
+
+    // Keep firing
+    const interval = setInterval(() => {
+        const x = rnd(canvas.width*0.1, canvas.width*0.9);
+        const y = rnd(canvas.height*0.1, canvas.height*0.5);
+        burst(x, y, 35);
+    }, 2000);
+    setTimeout(() => clearInterval(interval), 12000);
+})();
+{% endif %}
+</script>
+
+{% endblock %}

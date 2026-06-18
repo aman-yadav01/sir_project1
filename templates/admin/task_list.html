@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}Task Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "admin/includes/sidebar.html" %}
+
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-check2-square" style="color:#ff6b35;"></i> Task Management</h2>
+                <a href="{% url 'admin_task_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Assign New Task
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card stat-card primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Tasks</h6>
+                                    <h2 class="mb-0">{{ total }}</h2>
+                                </div>
+                                <i class="bi bi-list-task text-primary" style="font-size:2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card stat-card warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Assigned</h6>
+                                    <h2 class="mb-0">{{ assigned_count }}</h2>
+                                </div>
+                                <i class="bi bi-person-check" style="font-size:2.5rem; color:#f5576c;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card stat-card info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">In Progress</h6>
+                                    <h2 class="mb-0">{{ in_progress_count }}</h2>
+                                </div>
+                                <i class="bi bi-hourglass-split" style="font-size:2.5rem; color:#4facfe;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card stat-card success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Completed</h6>
+                                    <h2 class="mb-0">{{ completed_count }}</h2>
+                                </div>
+                                <i class="bi bi-check-circle" style="font-size:2.5rem; color:#11998e;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Logs Notification -->
+            {% if unseen_logs > 0 %}
+            <div class="alert" style="background: linear-gradient(135deg,#11998e,#38ef7d); color:white; border-radius:12px;">
+                <i class="bi bi-bell-fill"></i>
+                <strong>{{ unseen_logs }} new work log{{ unseen_logs|pluralize }}</strong> employees ne bheja hai.
+                <a href="{% url 'admin_work_logs' %}" class="btn btn-sm btn-light ms-2">Dekho</a>
+            </div>
+            {% endif %}
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-6 col-md-3 mb-3">
+                            <label class="form-label">Filter by Employee</label>
+                            <select name="employee" class="form-select">
+                                <option value="">All Employees</option>
+                                {% for emp in employees %}
+                                    <option value="{{ emp.id }}" {% if employee_filter == emp.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ emp.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label class="form-label">Filter by Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned</option>
+                                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <label class="form-label">Filter by Priority</label>
+                            <select name="priority" class="form-select">
+                                <option value="">All Priorities</option>
+                                <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>🔴 Urgent</option>
+                                <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>🟠 High</option>
+                                <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                                <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>🟢 Low</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Apply Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tasks Table -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-check2-square"></i> All Tasks
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Task</th>
+                                    <th>Assigned To</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Deadline</th>
+                                    <th>Work Logs</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ task.title }}</strong>
+                                        <br><small class="text-muted">{{ task.description|truncatechars:60 }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if task.assigned_to.photo %}
+                                                <img src="{{ task.assigned_to.photo.url }}" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;">
+                                            {% endif %}
+                                            {{ task.assigned_to.full_name }}<br>
+                                            <small class="text-muted">{{ task.assigned_to.employee_id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if task.priority == 'urgent' %}
+                                            <span class="badge" style="background:#fa709a;">🔴 Urgent</span>
+                                        {% elif task.priority == 'high' %}
+                                            <span class="badge" style="background:#ff6b35;">🟠 High</span>
+                                        {% elif task.priority == 'medium' %}
+                                            <span class="badge" style="background:#f5c518;color:#333;">🟡 Medium</span>
+                                        {% else %}
+                                            <span class="badge" style="background:#11998e;">🟢 Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.status == 'assigned' %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">Assigned</span>
+                                        {% elif task.status == 'in_progress' %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#f093fb,#f5576c);">In Progress</span>
+                                        {% else %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#11998e,#38ef7d);">✓ Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.deadline %}
+                                            {{ task.deadline|date:"d M Y" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% with log_count=task.work_logs.count unseen=task.get_unseen_logs_count %}
+                                            <a href="{% url 'admin_task_detail' task.pk %}">
+                                                <span class="badge bg-secondary">{{ log_count }} logs</span>
+                                                {% if unseen > 0 %}
+                                                    <span class="badge" style="background:#38ef7d;color:#333;">{{ unseen }} new</span>
+                                                {% endif %}
+                                            </a>
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'admin_task_detail' task.pk %}" class="btn btn-sm btn-info" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'admin_task_edit' task.pk %}" class="btn btn-sm btn-warning" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteTask({{ task.pk }}, '{{ task.title|escapejs }}')" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size:2rem;"></i>
+                                        <br>Koi task nahi mila.
+                                        <a href="{% url 'admin_task_create' %}">Pehla task assign karo</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="bi bi-trash"></i> Delete Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Task <strong id="taskTitle"></strong> delete karna chahte ho?</p>
+                <p class="text-danger small">Saare work logs bhi delete ho jayenge.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteTask(pk, title) {
+    document.getElementById('taskTitle').textContent = title;
+    document.getElementById('deleteForm').action = '/admin/tasks/' + pk + '/delete/';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

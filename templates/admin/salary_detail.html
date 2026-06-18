@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Salary Detail - {{ salary.employee.full_name }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-person-badge"></i> Salary Detail</h2>
+
+                <a href="{% url 'salary_management' %}" class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left"></i> Back to Salary Management
+
+                </a>
+
+            </div>
+
+            
+
+            <!-- Employee Info -->
+
+            <div class="card mb-4">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Employee Information</h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-6 col-md-3 mb-3">
+
+                            <h6 class="text-muted">Employee ID</h6>
+
+                            <p class="fw-bold">{{ salary.employee.employee_id }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-3 mb-3">
+
+                            <h6 class="text-muted">Name</h6>
+
+                            <p class="fw-bold">{{ salary.employee.full_name }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-3 mb-3">
+
+                            <h6 class="text-muted">Designation</h6>
+
+                            <p class="fw-bold">{{ salary.employee.designation }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-3 mb-3">
+
+                            <h6 class="text-muted">Salary Cycle</h6>
+
+                            <p class="fw-bold">{{ salary.cycle_start_date|date:"d M" }} to {{ salary.cycle_end_date|date:"d M Y" }}</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Salary Breakdown -->
+
+            <div class="row mb-4">
+
+                <div class="col-12 col-md-6">
+
+                    <div class="card h-100">
+
+                        <div class="card-header bg-info text-white">
+
+                            <h5 class="mb-0"><i class="bi bi-calculator"></i> Salary Breakdown</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <table class="table table-borderless">
+
+                                <tr>
+
+                                    <td>Base Salary:</td>
+
+                                    <td class="text-end fw-bold">₹{{ salary.base_salary|floatformat:2 }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <td>Present Days:</td>
+
+                                    <td class="text-end"><span class="badge bg-success">{{ salary.present_days }}</span></td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <td>Approved Leaves:</td>
+
+                                    <td class="text-end"><span class="badge bg-info">{{ salary.approved_leaves }}</span></td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <td>Effective Working Days:</td>
+
+                                    <td class="text-end"><span class="badge bg-primary">{{ salary.total_working_days }}</span></td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <td>Per Day Salary:</td>
+
+                                    <td class="text-end">₹{{ salary.per_day_salary|floatformat:2 }}</td>
+
+                                </tr>
+
+                                <tr class="border-top">
+
+                                    <td><strong>Calculated Salary:</strong></td>
+
+                                    <td class="text-end"><strong class="text-success">₹{{ salary.final_salary|floatformat:2 }}</strong></td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <td class="text-danger">Deduction:</td>
+
+                                    <td class="text-end text-danger">-₹{{ salary.deduction|floatformat:2 }}</td>
+
+                                </tr>
+
+                                {% if salary.incentive_amount > 0 %}
+
+                                <tr class="table-success">
+
+                                    <td class="text-success"><i class="bi bi-gift"></i> <strong>Incentive:</strong></td>
+
+                                    <td class="text-end text-success fw-bold">+₹{{ salary.incentive_amount|floatformat:2 }}</td>
+
+                                </tr>
+
+                                {% endif %}
+
+                                <tr class="table-primary border-top">
+
+                                    <td><strong>Total Payable:</strong></td>
+
+                                    <td class="text-end fw-bold text-primary fs-5">₹{{ salary.get_total_salary|floatformat:2 }}</td>
+
+                                </tr>
+
+                            </table>
+
+                            <div class="text-end mt-2">
+
+                                <a href="{% url 'incentive_add' %}?employee={{ salary.employee.id }}" class="btn btn-sm btn-outline-success">
+
+                                    <i class="bi bi-gift"></i> Add Incentive
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-6">
+
+                    <div class="card h-100">
+
+                        <div class="card-header bg-success text-white">
+
+                            <h5 class="mb-0"><i class="bi bi-cash"></i> Payment Status</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="text-center mb-4">
+
+                                {% if salary.payment_status == 'completed' %}
+
+                                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+
+                                    <h4 class="mt-2 text-success">Fully Paid</h4>
+
+                                {% elif salary.payment_status == 'partial' %}
+
+                                    <i class="bi bi-clock-fill text-warning" style="font-size: 4rem;"></i>
+
+                                    <h4 class="mt-2 text-warning">Partially Paid</h4>
+
+                                {% else %}
+
+                                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+
+                                    <h4 class="mt-2 text-danger">Pending</h4>
+
+                                {% endif %}
+
+                            </div>
+
+                            
+
+                            <table class="table table-borderless">
+
+                                <tr>
+
+                                    <td>Final Salary:</td>
+
+                                    <td class="text-end fw-bold">₹{{ salary.final_salary|floatformat:2 }}</td>
+
+                                </tr>
+
+                                {% if salary.incentive_amount > 0 %}
+
+                                <tr class="text-success">
+
+                                    <td><i class="bi bi-gift"></i> Incentive:</td>
+
+                                    <td class="text-end fw-bold">+₹{{ salary.incentive_amount|floatformat:2 }}</td>
+
+                                </tr>
+
+                                {% endif %}
+
+                                <tr class="border-top">
+
+                                    <td><strong>Total Payable:</strong></td>
+
+                                    <td class="text-end fw-bold text-primary">₹{{ salary.get_total_salary|floatformat:2 }}</td>
+
+                                </tr>
+
+                                <tr class="text-success">
+
+                                    <td>Total Paid:</td>
+
+                                    <td class="text-end fw-bold">₹{{ salary.total_paid|floatformat:2 }}</td>
+
+                                </tr>
+
+                                <tr class="text-danger">
+
+                                    <td>Pending Amount:</td>
+
+                                    <td class="text-end fw-bold">₹{{ salary.pending_amount|floatformat:2 }}</td>
+
+                                </tr>
+
+                            </table>
+
+                            
+
+                            {% if salary.payment_status != 'completed' %}
+
+                            <div class="d-grid mt-3">
+
+                                <a href="{% url 'add_payment' salary.id %}" class="btn btn-success btn-lg">
+
+                                    <i class="bi bi-plus-circle"></i> Add Payment
+
+                                </a>
+
+                            </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Incentives for this Salary Cycle -->
+
+            {% if salary.incentives.all %}
+
+            <div class="card mb-4">
+
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+
+                    <h5 class="mb-0"><i class="bi bi-gift"></i> Incentives (This Cycle)</h5>
+
+                    <a href="{% url 'incentive_add' %}?employee={{ salary.employee.id }}" class="btn btn-sm btn-light">
+
+                        <i class="bi bi-plus"></i> Add More
+
+                    </a>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Title</th>
+
+                                    <th>Type</th>
+
+                                    <th>Amount</th>
+
+                                    <th>Date</th>
+
+                                    <th>Reason</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for inc in salary.incentives.all %}
+
+                                <tr>
+
+                                    <td>{{ inc.title }}</td>
+
+                                    <td><span class="badge bg-info">{{ inc.get_incentive_type_display }}</span></td>
+
+                                    <td class="fw-bold text-success">₹{{ inc.amount|floatformat:2 }}</td>
+
+                                    <td>{{ inc.incentive_date|date:"d M Y" }}</td>
+
+                                    <td>{{ inc.reason|default:"-"|truncatewords:8 }}</td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                            <tfoot>
+
+                                <tr class="table-success fw-bold">
+
+                                    <td colspan="2" class="text-end">Total Incentive:</td>
+
+                                    <td colspan="3">₹{{ salary.incentive_amount|floatformat:2 }}</td>
+
+                                </tr>
+
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="card mb-4 border-dashed">
+
+                <div class="card-body text-center text-muted py-3">
+
+                    <i class="bi bi-gift" style="font-size:2rem;"></i>
+
+                    <p class="mt-2 mb-1">No incentives for this cycle.</p>
+
+                    <a href="{% url 'incentive_add' %}?employee={{ salary.employee.id }}" class="btn btn-sm btn-outline-success">
+
+                        <i class="bi bi-plus-circle"></i> Add Incentive
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+
+            <!-- Payment History -->
+
+            <div class="card">
+
+                <div class="card-header bg-warning text-dark">
+
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Payment History</h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    {% if payments %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>#</th>
+
+                                    <th>Payment Date</th>
+
+                                    <th>Amount</th>
+
+                                    <th>Payment Method</th>
+
+                                    <th>Reference Number</th>
+
+                                    <th>Notes</th>
+
+                                    <th>Paid By</th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for payment in payments %}
+
+                                <tr>
+
+                                    <td>{{ forloop.counter }}</td>
+
+                                    <td>{{ payment.payment_date|date:"d M Y" }}</td>
+
+                                    <td class="fw-bold text-success">₹{{ payment.amount|floatformat:2 }}</td>
+
+                                    <td>
+
+                                        <span class="badge bg-info">{{ payment.get_payment_method_display }}</span>
+
+                                    </td>
+
+                                    <td>{{ payment.reference_number|default:"-" }}</td>
+
+                                    <td>{{ payment.notes|default:"-"|truncatewords:5 }}</td>
+
+                                    <td>{{ payment.paid_by.username }}</td>
+
+                                    <td>
+
+                                        <button class="btn btn-sm btn-danger delete-payment-btn" 
+
+                                                data-payment-id="{{ payment.id }}"
+
+                                                data-amount="{{ payment.amount }}">
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                            <tfoot>
+
+                                <tr class="table-success">
+
+                                    <td colspan="2" class="text-end"><strong>Total Paid:</strong></td>
+
+                                    <td colspan="6" class="fw-bold">₹{{ salary.total_paid|floatformat:2 }}</td>
+
+                                </tr>
+
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                    <div class="text-center text-muted py-4">
+
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+
+                        <p class="mt-2">No payments recorded yet.</p>
+
+                        {% if salary.payment_status != 'completed' %}
+
+                        <a href="{% url 'add_payment' salary.id %}" class="btn btn-success">
+
+                            <i class="bi bi-plus-circle"></i> Add First Payment
+
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+// Delete payment
+
+document.querySelectorAll('.delete-payment-btn').forEach(btn => {
+
+    btn.addEventListener('click', function() {
+
+        const paymentId = this.dataset.paymentId;
+
+        const amount = this.dataset.amount;
+
+        
+
+        if (confirm(`Delete payment of ₹${amount}?`)) {
+
+            fetch(`/admin/salary/payment/${paymentId}/delete/`, {
+
+                method: 'POST',
+
+                headers: {
+
+                    'X-CSRFToken': '{{ csrf_token }}',
+
+                    'Content-Type': 'application/json'
+
+                }
+
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                if (data.success) {
+
+                    alert(data.message);
+
+                    location.reload();
+
+                } else {
+
+                    alert('Error: ' + data.error);
+
+                }
+
+            })
+
+            .catch(error => {
+
+                alert('Error: ' + error);
+
+            });
+
+        }
+
+    });
+
+});
+
+</script>
+
+
+
+{% endblock %}
+

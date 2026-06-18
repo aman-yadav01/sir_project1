@@ -1,0 +1,47 @@
+<div class="col-md-2 sidebar p-3">
+    <div class="mb-4" style="color:#333;">
+        <h5><i class="bi bi-person-circle"></i> Employee</h5>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link {% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}"
+           href="{% url 'employee_dashboard' %}">
+            <i class="bi bi-house-door"></i> Dashboard
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'punch_in_out' %}active{% endif %}"
+           href="{% url 'punch_in_out' %}">
+            <i class="bi bi-camera"></i> Punch In/Out
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'employee_task_list' or request.resolver_match.url_name == 'employee_task_detail' %}active{% endif %}"
+           href="{% url 'employee_task_list' %}" id="sidebarTaskLink">
+            <i class="bi bi-check2-square"></i> My Tasks
+            <span id="sidebarTaskBadge" class="badge ms-1"
+                  style="background:#38ef7d;color:#333;font-size:0.7rem;display:none;"></span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'employee_leaves' %}active{% endif %}"
+           href="{% url 'employee_leaves' %}">
+            <i class="bi bi-envelope"></i> My Leaves
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'employee_attendance_history' %}active{% endif %}"
+           href="{% url 'employee_attendance_history' %}">
+            <i class="bi bi-calendar-check"></i> Attendance History
+        </a>
+        <hr style="border-color:rgba(0,0,0,0.15);">
+        <a class="nav-link" href="{% url 'logout' %}" style="color:#fa709a;">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+    </nav>
+</div>
+
+<!-- Unseen task badge script — runs on every page -->
+<script>
+(function(){
+    fetch("{% url 'get_unseen_task_count' %}")
+        .then(r => r.json())
+        .then(data => {
+            if (data.count > 0) {
+                const b = document.getElementById('sidebarTaskBadge');
+                if (b) { b.textContent = data.count; b.style.display = 'inline'; }
+            }
+        }).catch(()=>{});
+})();
+</script>

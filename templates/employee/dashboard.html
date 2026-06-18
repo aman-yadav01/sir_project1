@@ -1,0 +1,1125 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========== NUCLEAR PARTY BLAST STYLES ========== */
+
+/* Upcoming birthdays banner */
+.upcoming-bday-bar {
+    background: linear-gradient(135deg, #f5a623 0%, #f76b1c 50%, #e53e3e 100%);
+    border-radius: 16px;
+    color: white;
+    padding: 16px 24px;
+    box-shadow: 0 6px 24px rgba(245,166,35,0.4);
+    position: relative;
+    overflow: hidden;
+    animation: upBdayPulse 2s ease-in-out infinite alternate;
+}
+@keyframes upBdayPulse {
+    from { box-shadow: 0 6px 24px rgba(245,166,35,0.4); }
+    to   { box-shadow: 0 10px 40px rgba(245,166,35,0.7); }
+}
+.upcoming-bday-bar::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+        45deg, transparent, transparent 8px,
+        rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 16px
+    );
+}
+.upcoming-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 30px;
+    padding: 5px 14px 5px 5px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-weight: 600;
+    font-size: 0.88rem;
+    transition: transform 0.2s;
+}
+.upcoming-chip:hover { transform: scale(1.05); }
+.upcoming-chip img {
+    width: 32px; height: 32px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.7);
+}
+.days-badge-sm {
+    background: rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* Flash overlay - screen white flash on boom */
+#partyFlash {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    background: white;
+    z-index: 99998;
+    pointer-events: none;
+    opacity: 0;
+    animation: screenFlash 0.15s ease-out 0.1s 3;
+}
+@keyframes screenFlash {
+    0%   { opacity: 0.85; }
+    100% { opacity: 0; }
+}
+
+/* Shockwave rings */
+#shockwaveContainer {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    z-index: 99997;
+    pointer-events: none;
+    overflow: hidden;
+}
+.shockwave {
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.9);
+    transform: translate(-50%, -50%) scale(0);
+    animation: shockwaveAnim 1s ease-out forwards;
+}
+@keyframes shockwaveAnim {
+    0%   { transform: translate(-50%,-50%) scale(0);   opacity: 1;   border-width: 6px; }
+    60%  { opacity: 0.6; }
+    100% { transform: translate(-50%,-50%) scale(8);   opacity: 0;   border-width: 1px; }
+}
+
+/* Main canvas - confetti + fireworks */
+#partyCanvas {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    z-index: 99999;
+    pointer-events: none;
+}
+
+/* Birthday popup */
+#birthdayPopup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 100001;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    border-radius: 28px;
+    padding: 44px 56px;
+    color: white;
+    text-align: center;
+    pointer-events: all;
+    max-width: 500px;
+    width: 92%;
+    animation: nuclearPopup 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.8) 0.5s forwards;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow:
+        0 0 0 4px rgba(249,83,198,0.4),
+        0 0 60px rgba(249,83,198,0.6),
+        0 0 120px rgba(124,58,237,0.4),
+        0 30px 80px rgba(0,0,0,0.7);
+}
+#birthdayPopup::before {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #f953c6, #7c3aed, #38ef7d, #f5a623, #f953c6);
+    background-size: 300% 300%;
+    animation: rainbowBorder 2s linear infinite;
+    z-index: -1;
+    filter: blur(3px);
+}
+@keyframes rainbowBorder {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+@keyframes nuclearPopup {
+    0%   { transform: translate(-50%,-50%) scale(0) rotate(-15deg); opacity:0; }
+    60%  { transform: translate(-50%,-50%) scale(1.1) rotate(3deg);  opacity:1; }
+    80%  { transform: translate(-50%,-50%) scale(0.96) rotate(-1deg); }
+    100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); opacity:1; }
+}
+
+#birthdayPopup .close-btn {
+    position: absolute; top:14px; right:18px;
+    font-size:1.6rem; cursor:pointer;
+    background:none; border:none; color:rgba(255,255,255,0.7);
+    transition: color 0.2s, transform 0.2s;
+    line-height:1;
+}
+#birthdayPopup .close-btn:hover { color:white; transform:rotate(90deg) scale(1.2); }
+
+.cake-wrap {
+    font-size: 5.5rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: cakeBoom 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.2s both,
+               cakeFloat 2s ease-in-out 1.8s infinite alternate;
+    filter: drop-shadow(0 0 20px rgba(249,83,198,0.8));
+}
+@keyframes cakeBoom {
+    0%   { transform: scale(0) rotate(-20deg); }
+    70%  { transform: scale(1.3) rotate(8deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes cakeFloat {
+    from { transform: translateY(0) rotate(-4deg); }
+    to   { transform: translateY(-14px) rotate(4deg); }
+}
+
+.popup-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #f953c6, #fff200, #38ef7d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+    text-shadow: none;
+    animation: titleGlow 1.5s ease-in-out infinite alternate;
+    letter-spacing: 1px;
+}
+@keyframes titleGlow {
+    from { filter: brightness(1); }
+    to   { filter: brightness(1.4) drop-shadow(0 0 10px #f953c6); }
+}
+
+.emp-name-pill {
+    display: inline-block;
+    background: linear-gradient(135deg, #f953c6, #7c3aed);
+    border-radius: 50px;
+    padding: 8px 22px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin: 6px 4px;
+    box-shadow: 0 4px 20px rgba(249,83,198,0.5);
+    animation: pillPulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes pillPulse {
+    from { box-shadow: 0 4px 20px rgba(249,83,198,0.5); }
+    to   { box-shadow: 0 6px 35px rgba(249,83,198,0.9); }
+}
+
+.emoji-row {
+    font-size: 2rem;
+    margin: 16px 0;
+    animation: emojiDance 0.5s ease-in-out infinite alternate;
+    display: block;
+    letter-spacing: 6px;
+}
+@keyframes emojiDance {
+    from { transform: rotate(-3deg) scale(1); }
+    to   { transform: rotate(3deg) scale(1.08); }
+}
+
+.party-btn {
+    background: linear-gradient(135deg, #f953c6, #f5a623);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 30px rgba(249,83,198,0.6);
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-transform: uppercase;
+    animation: btnBounce 0.8s ease-in-out infinite alternate;
+}
+@keyframes btnBounce {
+    from { transform: scale(1); box-shadow: 0 8px 30px rgba(249,83,198,0.6); }
+    to   { transform: scale(1.04); box-shadow: 0 12px 40px rgba(249,83,198,0.9); }
+}
+.party-btn:hover { transform: scale(1.1) !important; }
+
+/* Page banner */
+.emp-birthday-banner {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #f953c6 100%);
+    border-radius: 20px;
+    color: white;
+    padding: 26px 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(249,83,198,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.emp-birthday-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255,255,255,0.03) 10px,
+        rgba(255,255,255,0.03) 20px
+    );
+}
+.banner-sparkle {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: sparkleFly 3s ease-in-out infinite;
+    opacity: 0.7;
+}
+@keyframes sparkleFly {
+    0%,100% { transform: translateY(0) rotate(0deg); opacity:0.7; }
+    50%      { transform: translateY(-20px) rotate(180deg); opacity:1; }
+}
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "employee/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4">Welcome, {{ employee.full_name }}!</h2>
+
+            <!-- ===== NUCLEAR BIRTHDAY PARTY BLAST ===== -->
+            {% if todays_birthdays %}
+            <!-- Screen flash -->
+            <div id="partyFlash"></div>
+            <!-- Shockwave rings -->
+            <div id="shockwaveContainer"></div>
+            <!-- Confetti + fireworks canvas -->
+            <canvas id="partyCanvas"></canvas>
+
+            <!-- Popup card -->
+            <div id="birthdayPopup">
+                <button class="close-btn" onclick="closeBirthdayParty()">✕</button>
+                <span class="cake-wrap">🎂</span>
+                <div class="popup-title">HAPPY BIRTHDAY!</div>
+                <div style="margin: 6px 0; opacity:0.9; font-size:0.95rem; letter-spacing:1px;">
+                    {% if todays_birthdays|length > 1 %}
+                        🎊 SABKO BOHOT BOHOT BADHAI! 🎊
+                    {% else %}
+                        🎊 WISHING YOU THE BEST! 🎊
+                    {% endif %}
+                </div>
+                <div class="mt-2 mb-2">
+                    {% for emp in todays_birthdays %}
+                    <div class="emp-name-pill" style="display:flex;align-items:center;gap:10px;padding:8px 22px 8px 12px;margin:8px 0;">
+                        {% if emp.photo %}
+                            <img src="{{ emp.photo.url }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.7);" alt="">
+                        {% endif %}
+                        <div style="text-align:left;">
+                            <div style="font-weight:800;font-size:1rem;">{{ emp.full_name }}</div>
+                            <div style="font-size:0.72rem;opacity:0.85;">{{ emp.designation }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <span class="emoji-row">🎉🎊🥳🎈🎁✨🌟💝🎵🎶🎺🥂</span>
+                <button class="party-btn" onclick="closeBirthdayParty()">
+                    💥 PARTY TIME! 💥
+                </button>
+            </div>
+
+            <!-- In-page banner (always visible) -->
+            <div class="emp-birthday-banner mb-4">
+                <span class="banner-sparkle" style="top:10%;left:3%;animation-delay:0s;">✨</span>
+                <span class="banner-sparkle" style="top:20%;right:5%;animation-delay:0.6s;">🌟</span>
+                <span class="banner-sparkle" style="bottom:15%;left:8%;animation-delay:1.2s;">💫</span>
+                <span class="banner-sparkle" style="bottom:10%;right:12%;animation-delay:0.3s;">🎊</span>
+                <div style="position:relative;z-index:2;">
+                    <div style="font-size:2.2rem;margin-bottom:10px;letter-spacing:6px;">🎂🎉🎈🎊🥳</div>
+                    <div style="font-size:1.4rem;font-weight:900;letter-spacing:1px;margin-bottom:12px;">
+                        🎊 HAPPY BIRTHDAY! 🎊
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for emp in todays_birthdays %}
+                        <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,0.15);border-radius:50px;padding:8px 20px 8px 8px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo.url }}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.8);box-shadow:0 0 15px rgba(249,83,198,0.6);" alt="">
+                            {% else %}
+                                <span style="width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.6rem;border:2px solid white;">🎈</span>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight:800;font-size:1rem;">{{ emp.full_name }}</div>
+                                <div style="font-size:0.78rem;opacity:0.85;">{{ emp.designation }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ===== UPCOMING BIRTHDAYS ===== -->
+            {% if upcoming_birthdays %}
+            <div class="upcoming-bday-bar mb-4">
+                <div style="position:relative;z-index:2;">
+                    <div style="font-weight:700;font-size:1rem;margin-bottom:8px;letter-spacing:0.5px;">
+                        ⏰ Aane waala Birthday!
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for emp in upcoming_birthdays %}
+                        <span class="upcoming-chip">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo.url }}" alt="{{ emp.full_name }}">
+                            {% else %}
+                                <span style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;">🎁</span>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight:600;font-size:0.82rem;">{{ emp.full_name }}</div>
+                                <div style="font-size:0.68rem;opacity:0.8;">{{ emp.designation }}</div>
+                            </div>
+                            <span class="days-badge-sm">{{ emp.days_until_birthday }} din</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <!-- ====================================== -->
+            
+            <!-- Profile Card -->
+
+            <div class="row mb-4">
+
+                <div class="col-md-4 col-12 mb-3 mb-md-0">
+
+                    <div class="card">
+
+                        <div class="card-body text-center">
+
+                            {% if employee.photo %}
+
+                                <img src="{{ employee.photo.url }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+
+                            {% else %}
+
+                                <i class="bi bi-person-circle" style="font-size: 120px;"></i>
+
+                            {% endif %}
+
+                            <h5>{{ employee.full_name }}</h5>
+
+                            <p class="text-muted mb-1">{{ employee.designation }}</p>
+
+                            <p class="text-muted small">{{ employee.employee_id }}</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-md-8 col-12">
+
+                    <div class="row g-3">
+
+                        <!-- Shift Information -->
+
+                        {% if employee.shift %}
+
+                        <div class="col-12">
+
+                            <div class="card stat-card warning">
+
+                                <div class="card-body">
+
+                                    <h6 class="text-muted">
+
+                                        <i class="bi bi-clock-history"></i> Your Assigned Shift
+
+                                    </h6>
+
+                                    <h3>
+
+                                        {% if employee.shift.name == 'morning' %}
+
+                                            <i class="bi bi-sunrise"></i>
+
+                                        {% else %}
+
+                                            <i class="bi bi-moon-stars"></i>
+
+                                        {% endif %}
+
+                                        {{ employee.shift.get_name_display }}
+
+                                    </h3>
+
+                                    <small class="text-muted">
+
+                                        Punch In: {{ employee.shift.punch_in_start|time:"h:i A" }} - {{ employee.shift.punch_in_end|time:"h:i A" }} | 
+
+                                        Punch Out: {{ employee.shift.punch_out_time|time:"h:i A" }}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+                        
+
+                        <div class="col-sm-6 col-6">
+
+                            <div class="card stat-card success">
+
+                                <div class="card-body">
+
+                                    <h6 class="text-muted">Present This Month</h6>
+
+                                    <h2>{{ present_count }}</h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div class="col-sm-6 col-6">
+
+                            <div class="card stat-card info">
+
+                                <div class="card-body">
+
+                                    <h6 class="text-muted">Approved Leaves</h6>
+
+                                    <h2>{{ leave_count }}</h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div class="col-12">
+
+                            <div class="card stat-card primary">
+
+                                <div class="card-body">
+
+                                    <h6 class="text-muted">Current Month Salary</h6>
+
+                                    <h2 class="text-success">₹{{ salary_data.final_salary|floatformat:2 }}</h2>
+
+                                    <div class="row mt-2">
+
+                                        <div class="col-6">
+
+                                            <small class="text-muted">
+
+                                                Base: ₹{{ salary_data.base_salary|floatformat:2 }}<br>
+
+                                                Present: {{ salary_data.present_days }} days<br>
+
+                                                Late: {{ salary_data.late_count }} times
+
+                                            </small>
+
+                                        </div>
+
+                                        <div class="col-6">
+
+                                            <small class="text-muted">
+
+                                                Very Late: {{ salary_data.very_late_count }}<br>
+
+                                                Absent: {{ salary_data.absent_days }} days<br>
+
+                                                Effective: {{ salary_data.effective_working_days }} days
+
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                    {% if salary_data.deduction > 0 %}
+
+                                    <div class="alert alert-warning mt-2 mb-0 py-1">
+
+                                        <small><i class="bi bi-exclamation-triangle"></i> Deduction: ₹{{ salary_data.deduction|floatformat:2 }}</small>
+
+                                    </div>
+
+                                    {% endif %}
+
+                                    {% if current_incentive > 0 %}
+
+                                    <div class="alert alert-success mt-2 mb-0 py-1">
+
+                                        <small><i class="bi bi-gift"></i> Incentive: +₹{{ current_incentive|floatformat:2 }} &nbsp;|&nbsp; <strong>Total: ₹{{ total_salary_with_incentive|floatformat:2 }}</strong></small>
+
+                                    </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Today's Attendance -->
+
+            <div class="row mb-4">
+
+                <div class="col-12">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-calendar-day"></i> Today's Attendance
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if today_attendance %}
+
+                                <div class="row">
+
+                                    <div class="col-12 col-md-4">
+
+                                    <strong>Punch In:</strong>
+
+                                        <p class="text-success">
+
+                                            {% if today_attendance.punch_in %}
+
+                                                {{ today_attendance.punch_in|date:"h:i A" }}
+
+                                            {% else %}
+
+                                                Not punched in
+
+                                            {% endif %}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+
+                                    <strong>Punch Out:</strong>
+
+                                        <p class="text-danger">
+
+                                            {% if today_attendance.punch_out %}
+
+                                                {{ today_attendance.punch_out|date:"h:i A" }}
+
+                                            {% else %}
+
+                                                Not punched out
+
+                                            {% endif %}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+
+                                    <strong>Status:</strong>
+
+                                        <p>
+
+                                            {% if today_attendance.status == 'present' %}
+
+                                                <span class="badge bg-success">Present</span>
+
+                                            {% elif today_attendance.status == 'late' %}
+
+                                                <span class="badge bg-warning">Late</span>
+
+                                            {% endif %}
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            {% else %}
+
+                                <p class="text-muted text-center">No attendance marked today</p>
+
+                                <div class="text-center">
+
+                                    <a href="{% url 'punch_in_out' %}" class="btn btn-primary">
+
+                                        <i class="bi bi-camera"></i> Mark Attendance
+
+                                    </a>
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Recent Attendance -->
+
+            <div class="row">
+
+                <div class="col-12">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-clock-history"></i> Recent Attendance
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-hover">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>Date</th>
+
+                                            <th>Punch In</th>
+
+                                            <th>Punch Out</th>
+
+                                            <th>Working Hours</th>
+
+                                            <th>Status</th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for att in recent_attendance %}
+
+                                        <tr>
+
+                                            <td>{{ att.date }}</td>
+
+                                            <td>{{ att.punch_in|date:"h:i A"|default:"-" }}</td>
+
+                                            <td>{{ att.punch_out|date:"h:i A"|default:"-" }}</td>
+
+                                            <td>{{ att.get_working_hours }} hrs</td>
+
+                                            <td>
+
+                                                {% if att.status == 'present' %}
+
+                                                    <span class="badge bg-success">Present</span>
+
+                                                {% elif att.status == 'late' %}
+
+                                                    <span class="badge bg-warning">Late</span>
+
+                                                {% elif att.status == 'absent' %}
+
+                                                    <span class="badge bg-danger">Absent</span>
+
+                                                {% endif %}
+
+                                            </td>
+
+                                        </tr>
+
+                                        {% empty %}
+
+                                        <tr>
+
+                                            <td colspan="5" class="text-center text-muted">No attendance records</td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// task badge is handled by sidebar include
+
+// ======================================================
+// 💥 NUCLEAR PARTY BLAST ENGINE 💥
+// ======================================================
+{% if todays_birthdays %}
+(function() {
+    const canvas = document.getElementById('partyCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ---- CONFIG ----
+    const COLORS = [
+        '#f953c6','#ff6b00','#fff200',
+        '#38ef7d','#7c3aed','#ff4d4d',
+        '#ffe66d','#00f260','#ffffff'
+    ];
+    const EMOJIS = ['🎂','🎉','🎈','🎁','✨','🥳','🎊','💝','🍰'];
+    let particles = [];
+    let rockets   = [];
+    let animId    = null;
+    let running   = true;
+    const MAX_PARTICLES = 150; // cap hard limit
+
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function rndInt(a, b) { return Math.floor(rnd(a, b)); }
+    function rndColor() { return COLORS[rndInt(0, COLORS.length)]; }
+    function rndEmoji() { return EMOJIS[rndInt(0, EMOJIS.length)]; }
+
+    // ---- PARTICLE ----
+    function spawnParticle(x, y, vx, vy, opts) {
+        if (particles.length >= MAX_PARTICLES) return; // hard cap
+        particles.push({
+            x, y, vx, vy,
+            gravity:    opts.gravity    ?? rnd(0.3, 0.6),
+            size:       opts.size       ?? rnd(5, 11),
+            color:      opts.color      ?? rndColor(),
+            emoji:      opts.emoji      ?? null,
+            rotation:   rnd(0, Math.PI * 2),
+            rotSpeed:   rnd(-0.2, 0.2),
+            opacity:    opts.opacity    ?? 1,
+            fade:       opts.fade       ?? rnd(0.012, 0.022), // faster fade
+            shape:      opts.shape      ?? ['rect','circle'][rndInt(0,2)], // only simple shapes
+            scaleX:     rnd(0.4, 1),
+            wobble:     rnd(0, Math.PI * 2),
+            wobbleAmp:  rnd(0.2, 0.6),
+            wobbleSpd:  rnd(0.06, 0.14),
+            glow:       false, // no glow - expensive
+        });
+    }
+
+    // ---- BURST from a point ----
+    function burst(x, y, count, extra) {
+        const actual = Math.min(count, 30); // max 30 per burst
+        for (let i = 0; i < actual; i++) {
+            const angle   = rnd(0, Math.PI * 2);
+            const speed   = rnd(3, extra?.maxSpeed ?? 12);
+            const isEmoji = Math.random() < (extra?.emojiFrac ?? 0.15);
+            spawnParticle(x, y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed - rnd(0, 3),
+                {
+                    size:  isEmoji ? rnd(18, 28) : rnd(4, 12),
+                    emoji: isEmoji ? rndEmoji() : null,
+                    color: rndColor(),
+                    glow:  false,
+                    shape: ['rect','circle'][rndInt(0,2)],
+                    gravity: rnd(0.3, 0.6),
+                    fade:    rnd(0.012, 0.02),
+                }
+            );
+        }
+    }
+
+    // ---- ROCKET ----
+    function launchRocket(startX) {
+        if (rockets.length >= 3) return; // max 3 rockets at a time
+        rockets.push({
+            x: startX ?? rnd(W * 0.1, W * 0.9),
+            y: H + 10,
+            vy: rnd(-16, -20),
+            vx: rnd(-1.5, 1.5),
+            targetY: rnd(H * 0.1, H * 0.4),
+            color: rndColor(),
+            trail: [],
+            exploded: false,
+        });
+    }
+
+    // ---- SHOCKWAVE DOM rings ----
+    function spawnShockwave(cx, cy, color) {
+        const container = document.getElementById('shockwaveContainer');
+        if (!container) return;
+        // Only 1 ring per explosion
+        const ring = document.createElement('div');
+        ring.className = 'shockwave';
+        const size = rnd(60, 140);
+        ring.style.cssText = `
+            left: ${cx}px; top: ${cy}px;
+            width: ${size}px; height: ${size}px;
+            border-color: ${color};
+            animation-duration: ${rnd(0.7, 1.1)}s;
+        `;
+        container.appendChild(ring);
+        setTimeout(() => ring.remove(), 1200);
+    }
+
+    // ---- SCREEN SHAKE ----
+    function screenShake(intensity, duration) {
+        const body = document.body;
+        const start = Date.now();
+        function shake() {
+            if (Date.now() - start > duration) { body.style.transform = ''; return; }
+            const x = rnd(-intensity, intensity);
+            const y = rnd(-intensity, intensity);
+            body.style.transform = `translate(${x}px,${y}px)`;
+            requestAnimationFrame(shake);
+        }
+        shake();
+    }
+
+    // ---- DRAW SHAPES (removed complex ones for performance) ----
+
+    // ---- RENDER LOOP ----
+    function draw() {
+        if (!running) return;
+        ctx.clearRect(0, 0, W, H);
+
+        // -- Rockets --
+        for (let i = rockets.length - 1; i >= 0; i--) {
+            const r = rockets[i];
+            if (r.exploded) { rockets.splice(i, 1); continue; }
+
+            r.trail.push({x: r.x, y: r.y});
+            if (r.trail.length > 10) r.trail.shift();
+
+            // Draw trail
+            for (let t = 0; t < r.trail.length; t++) {
+                ctx.save();
+                ctx.globalAlpha = (t / r.trail.length) * 0.6;
+                ctx.fillStyle = r.color;
+                ctx.beginPath();
+                ctx.arc(r.trail[t].x, r.trail[t].y, 2 * (t / r.trail.length), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Draw rocket head
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            r.x += r.vx;
+            r.y += r.vy;
+            r.vy += 0.5; // gravity on rocket
+
+            if (r.y <= r.targetY) {
+                r.exploded = true;
+                burst(r.x, r.y, 28, { maxSpeed: 14, emojiFrac: 0.2, particleOpts: { gravity: rnd(0.3, 0.6), fade: 0.015 } });
+                spawnShockwave(r.x, r.y, r.color);
+                screenShake(4, 150);
+            }
+        }
+
+        // -- Particles --
+        particles = particles.filter(p => p.opacity > 0.01 && p.y < H + 80);
+
+        for (const p of particles) {
+            p.wobble  += p.wobbleSpd;
+            p.x       += p.vx + Math.sin(p.wobble) * p.wobbleAmp;
+            p.y       += p.vy;
+            p.vy      += p.gravity;
+            p.vx      *= 0.993;
+            p.rotation += p.rotSpeed;
+            p.opacity  -= p.fade;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+
+            if (p.glow) {
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur  = 14;
+            }
+
+            if (p.emoji) {
+                ctx.font = `${p.size}px serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.emoji, 0, 0);
+            } else {
+                ctx.fillStyle = p.color;
+                ctx.scale(p.scaleX, 1);
+                const r = p.size / 2;
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-r, -r/2, p.size, p.size/2);
+                } else {
+                    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
+        animId = requestAnimationFrame(draw);
+    }
+
+    // ---- CONFETTI RAIN from top ----
+    function confettiRain() {
+        for (let i = 0; i < 5; i++) { // was 12
+            const isEmoji = Math.random() < 0.2;
+            spawnParticle(
+                rnd(0, W), rnd(-40, -5),
+                rnd(-1.5, 1.5), rnd(2, 6),
+                {
+                    gravity: 0.05,
+                    size:  isEmoji ? rnd(14, 22) : rnd(5, 10),
+                    emoji: isEmoji ? rndEmoji() : null,
+                    fade:  0.014,
+                    opacity: rnd(0.7, 1),
+                }
+            );
+        }
+    }
+
+    // ---- INITIAL BLAST ----
+    function megaBlast() {
+        // Reduced to 4 points, 25 particles each
+        const points = [
+            [W*0.2, H*0.25], [W*0.5, H*0.15],
+            [W*0.8, H*0.25], [W*0.5, H*0.5],
+        ];
+        points.forEach(([x, y]) => {
+            burst(x, y, 25, { maxSpeed: 14, emojiFrac: 0.2 });
+            spawnShockwave(x, y, rndColor());
+        });
+        screenShake(7, 300);
+    }
+
+    // ---- ORCHESTRATION ----
+    draw();
+    megaBlast();
+
+    // Launch 2 rockets after 0.5s
+    setTimeout(() => {
+        launchRocket();
+        setTimeout(() => launchRocket(), 400);
+    }, 500);
+
+    // New rocket every 3s (only if <3 active)
+    const rocketTimer = setInterval(() => launchRocket(), 3000);
+
+    // Light rain every 600ms
+    const rainTimer = setInterval(confettiRain, 600);
+
+    // Small burst every 4s
+    const blastTimer = setInterval(() => {
+        const x = rnd(W*0.15, W*0.85);
+        const y = rnd(H*0.15, H*0.55);
+        burst(x, y, 20, { maxSpeed: 12, emojiFrac: 0.2 });
+        spawnShockwave(x, y, rndColor());
+        screenShake(3, 150);
+    }, 4000);
+
+    // Stop after 10 sec
+    setTimeout(() => {
+        clearInterval(rocketTimer);
+        clearInterval(blastTimer);
+    }, 10000);
+
+    // Stop rain after 15s
+    setTimeout(() => clearInterval(rainTimer), 15000);
+
+    // Expose stop for close button
+    window._stopParty = function() {
+        running = false;
+        clearInterval(rocketTimer);
+        clearInterval(rainTimer);
+        clearInterval(blastTimer);
+        cancelAnimationFrame(animId);
+        ctx.clearRect(0, 0, W, H);
+        document.body.style.transform = '';
+    };
+})();
+
+function closeBirthdayParty() {
+    const popup = document.getElementById('birthdayPopup');
+    if (popup) {
+        popup.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        popup.style.transform  = 'translate(-50%,-50%) scale(0)';
+        popup.style.opacity    = '0';
+        setTimeout(() => popup.remove(), 350);
+    }
+    // Fade out canvas after 3 more seconds
+    setTimeout(() => {
+        if (window._stopParty) window._stopParty();
+        const canvas = document.getElementById('partyCanvas');
+        if (canvas) {
+            canvas.style.transition = 'opacity 1.5s';
+            canvas.style.opacity = '0';
+            setTimeout(() => canvas.remove(), 1600);
+        }
+        const sw = document.getElementById('shockwaveContainer');
+        if (sw) sw.remove();
+        document.body.style.transform = '';
+    }, 3000);
+}
+{% endif %}
+</script>
+{% endblock %}
+

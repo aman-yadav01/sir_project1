@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Task Detail - {{ task.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-photo { width:100%; max-height:200px; object-fit:cover; border-radius:10px; cursor:pointer; transition:.2s; }
+    .log-photo:hover { opacity:.85; transform:scale(1.01); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "admin/includes/sidebar.html" %}
+
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'admin_task_list' %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h2><i class="bi bi-clipboard-data" style="color:#ff6b35;"></i> Task Detail</h2>
+            </div>
+
+            <div class="row">
+                <!-- Task Info -->
+                <div class="col-12 col-md-5 mb-4 mb-md-0">
+                    <div class="card mb-4">
+                        <div class="card-header"><i class="bi bi-info-circle"></i> Task Info</div>
+                        <div class="card-body">
+                            <h4>{{ task.title }}</h4>
+                            <p class="text-muted">{{ task.description }}</p>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Assigned To</small>
+                                    <strong>{{ task.assigned_to.full_name }}</strong>
+                                    <br><small class="text-muted">{{ task.assigned_to.designation }}</small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Assigned By</small>
+                                    <strong>{{ task.assigned_by.username|default:"Admin" }}</strong>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Priority</small>
+                                    {% if task.priority == 'urgent' %}<span class="badge" style="background:#fa709a;">🔴 Urgent</span>
+                                    {% elif task.priority == 'high' %}<span class="badge" style="background:#ff6b35;">🟠 High</span>
+                                    {% elif task.priority == 'medium' %}<span class="badge" style="background:#f5c518;color:#333;">🟡 Medium</span>
+                                    {% else %}<span class="badge" style="background:#11998e;">🟢 Low</span>{% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Deadline</small>
+                                    <strong>{{ task.deadline|date:"d M Y"|default:"—" }}</strong>
+                                </div>
+                            </div>
+                            <hr>
+                            <small class="text-muted d-block mb-2">Update Status</small>
+                            <form method="post" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="assigned" {% if task.status == 'assigned' %}selected{% endif %}>Assigned</option>
+                                    <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Logs with Photos -->
+                <div class="col-12 col-md-7">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-journal-text"></i> Work Logs
+                            <span class="badge bg-secondary ms-2">{{ work_logs.count }}</span>
+                            {% with photo_count=work_logs|length %}{% endwith %}
+                        </div>
+                        <div class="card-body" style="max-height:none;">
+                            {% for log in work_logs %}
+                            <div class="card mb-3" style="border-left:4px solid #ff6b35;">
+                                <div class="card-body py-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <strong><i class="bi bi-calendar3"></i> {{ log.log_date|date:"d M Y" }}</strong>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            {% if log.photo %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#11998e,#38ef7d);color:white;">
+                                                <i class="bi bi-image"></i> Photo
+                                            </span>
+                                            {% endif %}
+                                            {% if log.hours_worked %}
+                                            <span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+                                                <i class="bi bi-clock"></i> {{ log.hours_worked }} hrs
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <p class="mb-2" style="white-space:pre-wrap;">{{ log.description }}</p>
+
+                                    {% if log.photo %}
+                                    <div class="mt-2 mb-2">
+                                        <img src="{{ log.photo.url }}" class="log-photo" alt="Task Proof"
+                                             onclick="openPhotoModal('{{ log.photo.url }}', '{{ log.employee.full_name }} - {{ log.log_date }}')"
+                                             title="Click to enlarge">
+                                    </div>
+                                    {% endif %}
+
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ log.employee.full_name }} &nbsp;|&nbsp;
+                                        Submitted: {{ log.created_at|date:"d M Y, h:i A" }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-journal" style="font-size:3rem;"></i>
+                                <p class="mt-2">Employee ne abhi koi work log submit nahi kiya.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Fullscreen Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:rgba(0,0,0,.9);border:none;">
+            <div class="modal-body p-2 text-center position-relative">
+                <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2"
+                        data-bs-dismiss="modal" style="z-index:10;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <img id="modalPhoto" src="" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;" alt="">
+                <div id="modalCaption" class="text-white mt-2 fw-bold fs-6"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPhotoModal(url, caption) {
+    document.getElementById('modalPhoto').src = url;
+    document.getElementById('modalCaption').textContent = caption;
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+</script>
+{% endblock %}

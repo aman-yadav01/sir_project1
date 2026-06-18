@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Add Payment - {{ salary.employee.full_name }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-plus-circle"></i> Add Payment</h2>
+
+                <a href="{% url 'salary_detail' salary.id %}" class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left"></i> Back to Salary Detail
+
+                </a>
+
+            </div>
+
+            
+
+            <!-- Employee & Salary Info -->
+
+            <div class="card mb-4 border-primary">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> Payment For</h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-6 col-md-3">
+
+                            <h6 class="text-muted">Employee</h6>
+
+                            <p class="fw-bold">{{ salary.employee.full_name }}</p>
+
+                            <small class="text-muted">{{ salary.employee.employee_id }}</small>
+
+                        </div>
+
+                        <div class="col-6 col-md-3">
+
+                            <h6 class="text-muted">Salary Cycle</h6>
+
+                            <p class="fw-bold">{{ salary.cycle_start_date|date:"d M" }} to {{ salary.cycle_end_date|date:"d M Y" }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-2">
+
+                            <h6 class="text-muted">Final Salary</h6>
+
+                            <p class="fw-bold text-primary">₹{{ salary.final_salary|floatformat:2 }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-2">
+
+                            <h6 class="text-muted">Already Paid</h6>
+
+                            <p class="fw-bold text-success">₹{{ salary.total_paid|floatformat:2 }}</p>
+
+                        </div>
+
+                        <div class="col-6 col-md-2">
+
+                            <h6 class="text-muted">Pending</h6>
+
+                            <p class="fw-bold text-danger">₹{{ salary.pending_amount|floatformat:2 }}</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Payment Form -->
+
+            <div class="row">
+
+                <div class="col-12 col-md-8 offset-md-0 offset-lg-2">
+
+                    <div class="card">
+
+                        <div class="card-header bg-success text-white">
+
+                            <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Payment Details</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+                                
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.amount.label }}</label>
+
+                                    {{ form.amount }}
+
+                                    {% if form.amount.help_text %}
+
+                                        <small class="form-text text-muted d-block">{{ form.amount.help_text }}</small>
+
+                                    {% endif %}
+
+                                    {% if form.amount.errors %}
+
+                                        <div class="text-danger mt-1">{{ form.amount.errors }}</div>
+
+                                    {% endif %}
+
+                                    <div class="mt-2">
+
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('id_amount').value = '{{ salary.pending_amount }}'">
+
+                                            Set Full Pending Amount
+
+                                        </button>
+
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setHalfAmount()">
+
+                                            Set Half Amount
+
+                                        </button>
+
+                                    </div>
+
+                                    <script>
+
+                                    function setHalfAmount() {
+
+                                        const fullAmount = {{ salary.pending_amount }};
+
+                                        const halfAmount = (fullAmount / 2).toFixed(2);
+
+                                        document.getElementById('id_amount').value = halfAmount;
+
+                                    }
+
+                                    </script>
+
+                                </div>
+
+                                
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.payment_date.label }}</label>
+
+                                    {{ form.payment_date }}
+
+                                    {% if form.payment_date.errors %}
+
+                                        <div class="text-danger mt-1">{{ form.payment_date.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.payment_method.label }}</label>
+
+                                    {{ form.payment_method }}
+
+                                    {% if form.payment_method.errors %}
+
+                                        <div class="text-danger mt-1">{{ form.payment_method.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.reference_number.label }}</label>
+
+                                    {{ form.reference_number }}
+
+                                    <small class="form-text text-muted d-block">Transaction ID, Cheque Number, etc. (Optional)</small>
+
+                                    {% if form.reference_number.errors %}
+
+                                        <div class="text-danger mt-1">{{ form.reference_number.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-bold">{{ form.notes.label }}</label>
+
+                                    {{ form.notes }}
+
+                                    <small class="form-text text-muted d-block">Any additional notes (Optional)</small>
+
+                                    {% if form.notes.errors %}
+
+                                        <div class="text-danger mt-1">{{ form.notes.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <hr>
+
+                                
+
+                                <div class="d-grid gap-2">
+
+                                    <button type="submit" class="btn btn-success btn-lg">
+
+                                        <i class="bi bi-check-circle"></i> Add Payment
+
+                                    </button>
+
+                                    <a href="{% url 'salary_detail' salary.id %}" class="btn btn-secondary">
+
+                                        <i class="bi bi-x-circle"></i> Cancel
+
+                                    </a>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    <!-- Info Card -->
+
+                    <div class="card mt-4">
+
+                        <div class="card-header bg-info text-white">
+
+                            <i class="bi bi-info-circle"></i> Payment Information
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <h6 class="fw-bold">Payment Types:</h6>
+
+                            <ul>
+
+                                <li><strong>Full Payment:</strong> Enter the complete pending amount (₹{{ salary.pending_amount|floatformat:2 }})</li>
+
+                                <li><strong>Partial Payment:</strong> Enter any amount less than pending (e.g., ₹5,000 advance)</li>
+
+                                <li><strong>Multiple Payments:</strong> You can add multiple payments until fully paid</li>
+
+                            </ul>
+
+                            
+
+                            <hr>
+
+                            
+
+                            <h6 class="fw-bold">After Adding Payment:</h6>
+
+                            <ul class="mb-0">
+
+                                <li>Total paid amount will be updated automatically</li>
+
+                                <li>Pending amount will be recalculated</li>
+
+                                <li>Payment status will update (Pending → Partial → Completed)</li>
+
+                                <li>Payment will appear in payment history</li>
+
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Attendance Records{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2>Attendance Records</h2>
+
+                <a href="{% url 'attendance_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success">
+
+                    <i class="bi bi-download"></i> Export CSV
+
+                </a>
+
+            </div>
+
+
+
+            <!-- Filter Form -->
+
+            <div class="card mb-4">
+
+                <div class="card-body">
+
+                    <form method="get" class="row g-3">
+
+                        <div class="col-12 col-md-3">
+
+                            {{ form.date }}
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            {{ form.employee }}
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            {{ form.status }}
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Attendance Table -->
+
+            <div class="card">
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Employee ID</th>
+
+                                    <th>Name</th>
+
+                                    <th>Date</th>
+
+                                    <th>Punch In</th>
+
+                                    <th>Punch Out</th>
+
+                                    <th>Status</th>
+
+                                    <th>Working Hours</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for att in attendances %}
+
+                                <tr>
+
+                                    <td>{{ att.employee.employee_id }}</td>
+
+                                    <td>{{ att.employee.full_name }}</td>
+
+                                    <td>{{ att.date }}</td>
+
+                                    <td>
+
+                                        {% if att.punch_in %}
+
+                                            {{ att.punch_in|time:"h:i A" }}
+
+                                            {% if att.is_late %}
+
+                                                <span class="badge bg-warning">Late</span>
+
+                                            {% endif %}
+
+                                        {% else %}
+
+                                            -
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>{{ att.punch_out|time:"h:i A"|default:"-" }}</td>
+
+                                    <td>
+
+                                        {% if att.status == 'present' %}
+
+                                            <span class="badge bg-success">Present</span>
+
+                                        {% elif att.status == 'late' %}
+
+                                            <span class="badge bg-warning">Late</span>
+
+                                        {% elif att.status == 'absent' %}
+
+                                            <span class="badge bg-danger">Absent</span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>{{ att.get_working_hours }}</td>
+
+                                </tr>
+
+                                {% empty %}
+
+                                <tr>
+
+                                    <td colspan="7" class="text-center">No attendance records found</td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

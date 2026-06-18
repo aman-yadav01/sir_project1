@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}{{ title }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4"><i class="bi bi-calendar-event"></i> {{ title }}</h2>
+
+            
+
+            <div class="card">
+
+                <div class="card-body">
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        
+
+                        <div class="row">
+
+                            <div class="col-12 col-md-6 mb-3">
+
+                                <label class="form-label fw-bold">{{ form.name.label }} *</label>
+
+                                {{ form.name }}
+
+                                {% if form.name.errors %}
+
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+
+                                {% endif %}
+
+                            </div>
+
+                            
+
+                            <div class="col-md-3 mb-3">
+
+                                <label class="form-label fw-bold">{{ form.start_date.label }} *</label>
+
+                                {{ form.start_date }}
+
+                                {% if form.start_date.errors %}
+
+                                    <div class="text-danger">{{ form.start_date.errors }}</div>
+
+                                {% endif %}
+
+                            </div>
+
+                            
+
+                            <div class="col-md-3 mb-3">
+
+                                <label class="form-label fw-bold">{{ form.end_date.label }} *</label>
+
+                                {{ form.end_date }}
+
+                                {% if form.end_date.errors %}
+
+                                    <div class="text-danger">{{ form.end_date.errors }}</div>
+
+                                {% endif %}
+
+                                <small class="text-muted">Same as start for single day</small>
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">{{ form.description.label }}</label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+
+                                <div class="text-danger">{{ form.description.errors }}</div>
+
+                            {% endif %}
+
+                        </div>
+
+                        
+
+                        <div class="mb-4">
+
+                            <div class="form-check">
+
+                                {{ form.is_active }}
+
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+
+                                    {{ form.is_active.label }}
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div class="mt-4">
+
+                            <button type="submit" class="btn btn-primary btn-lg">
+
+                                <i class="bi bi-check-circle"></i> Save Holiday
+
+                            </button>
+
+                            <a href="{% url 'holiday_list' %}" class="btn btn-secondary btn-lg">
+
+                                <i class="bi bi-x-circle"></i> Cancel
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

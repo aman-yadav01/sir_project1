@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Incentive Management{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-gift"></i> Incentive Management</h2>
+
+                <a href="{% url 'incentive_add' %}" class="btn btn-success btn-lg">
+
+                    <i class="bi bi-plus-circle"></i> Add Incentive
+
+                </a>
+
+            </div>
+
+
+
+            <!-- Summary Card -->
+
+            <div class="row mb-4">
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card text-white bg-success">
+
+                        <div class="card-body">
+
+                            <h6 class="card-title"><i class="bi bi-gift"></i> Total Incentives</h6>
+
+                            <h3>₹{{ total_incentive|floatformat:2 }}</h3>
+
+                            <small>{{ incentives|length }} record(s)</small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Filter -->
+
+            <div class="card mb-4">
+
+                <div class="card-body">
+
+                    <form method="get" class="row g-3 align-items-end">
+
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label fw-bold">Filter by Employee</label>
+
+                            <select name="employee" class="form-select">
+
+                                <option value="">All Employees</option>
+
+                                {% for emp in employees %}
+
+                                <option value="{{ emp.id }}" {% if selected_employee and selected_employee.id == emp.id %}selected{% endif %}>
+
+                                    {{ emp.employee_id }} - {{ emp.full_name }}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-2">
+
+                            <button type="submit" class="btn btn-primary w-100">
+
+                                <i class="bi bi-funnel"></i> Filter
+
+                            </button>
+
+                        </div>
+
+                        {% if selected_employee %}
+
+                        <div class="col-12 col-md-2">
+
+                            <a href="{% url 'incentive_list' %}" class="btn btn-secondary w-100">
+
+                                <i class="bi bi-x-circle"></i> Clear
+
+                            </a>
+
+                        </div>
+
+                        {% endif %}
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Incentive Table -->
+
+            <div class="card">
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Incentive Records</h5>
+
+                    <a href="{% url 'incentive_add' %}" class="btn btn-sm btn-success">
+
+                        <i class="bi bi-plus"></i> Add New
+
+                    </a>
+
+                </div>
+
+                <div class="card-body">
+
+                    {% if incentives %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover align-middle">
+
+                            <thead class="table-dark">
+
+                                <tr>
+
+                                    <th>#</th>
+
+                                    <th>Employee</th>
+
+                                    <th>Title</th>
+
+                                    <th>Type</th>
+
+                                    <th>Amount</th>
+
+                                    <th>Date</th>
+
+                                    <th>Linked Salary</th>
+
+                                    <th>Added By</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for incentive in incentives %}
+
+                                <tr>
+
+                                    <td>{{ forloop.counter }}</td>
+
+                                    <td>
+
+                                        <strong>{{ incentive.employee.full_name }}</strong>
+
+                                        <br><small class="text-muted">{{ incentive.employee.employee_id }}</small>
+
+                                    </td>
+
+                                    <td>{{ incentive.title }}</td>
+
+                                    <td>
+
+                                        <span class="badge bg-info">{{ incentive.get_incentive_type_display }}</span>
+
+                                    </td>
+
+                                    <td class="fw-bold text-success">₹{{ incentive.amount|floatformat:2 }}</td>
+
+                                    <td>{{ incentive.incentive_date|date:"d M Y" }}</td>
+
+                                    <td>
+
+                                        {% if incentive.salary %}
+
+                                            <a href="{% url 'salary_detail' incentive.salary.id %}" class="badge bg-primary text-decoration-none">
+
+                                                {{ incentive.salary.cycle_start_date|date:"d M" }} - {{ incentive.salary.cycle_end_date|date:"d M Y" }}
+
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">Not Linked</span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>{{ incentive.added_by.username|default:"-" }}</td>
+
+                                    <td>
+
+                                        <a href="{% url 'incentive_edit' incentive.id %}" class="btn btn-sm btn-warning">
+
+                                            <i class="bi bi-pencil"></i>
+
+                                        </a>
+
+                                        <button class="btn btn-sm btn-danger delete-btn"
+
+                                                data-id="{{ incentive.id }}"
+
+                                                data-amount="{{ incentive.amount }}"
+
+                                                data-name="{{ incentive.employee.full_name }}">
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                            <tfoot>
+
+                                <tr class="table-success fw-bold">
+
+                                    <td colspan="4" class="text-end">Total:</td>
+
+                                    <td>₹{{ total_incentive|floatformat:2 }}</td>
+
+                                    <td colspan="4"></td>
+
+                                </tr>
+
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                    <div class="text-center text-muted py-5">
+
+                        <i class="bi bi-gift" style="font-size: 4rem;"></i>
+
+                        <p class="mt-3 fs-5">No incentives found.</p>
+
+                        <a href="{% url 'incentive_add' %}" class="btn btn-success">
+
+                            <i class="bi bi-plus-circle"></i> Add First Incentive
+
+                        </a>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+
+    btn.addEventListener('click', function () {
+
+        const id = this.dataset.id;
+
+        const amount = this.dataset.amount;
+
+        const name = this.dataset.name;
+
+        if (confirm(`Delete incentive of ₹${amount} for ${name}?`)) {
+
+            fetch(`/admin/incentives/${id}/delete/`, {
+
+                method: 'POST',
+
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+
+            })
+
+            .then(r => r.json())
+
+            .then(data => {
+
+                if (data.success) { alert(data.message); location.reload(); }
+
+                else { alert('Error: ' + data.error); }
+
+            });
+
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
+

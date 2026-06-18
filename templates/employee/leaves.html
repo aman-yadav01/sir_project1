@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}My Leaves{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "employee/includes/sidebar.html" %}
+
+
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4">Leave Management</h2>
+
+
+
+            <div class="row">
+
+                <!-- Apply Leave Form -->
+
+                <div class="col-12 col-md-4 mb-4 mb-md-0">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h5>Apply for Leave</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if messages %}
+
+                                {% for message in messages %}
+
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+
+                                    {{ message }}
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+                                </div>
+
+                                {% endfor %}
+
+                            {% endif %}
+
+                            
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+                                
+
+                                {% if form.non_field_errors %}
+
+                                <div class="alert alert-danger">
+
+                                    {{ form.non_field_errors }}
+
+                                </div>
+
+                                {% endif %}
+
+                                
+
+                                <div class="mb-3">
+
+                                    {{ form.start_date.label_tag }}
+
+                                    {{ form.start_date }}
+
+                                    {% if form.start_date.errors %}
+
+                                    <div class="text-danger small">{{ form.start_date.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="mb-3">
+
+                                    {{ form.end_date.label_tag }}
+
+                                    {{ form.end_date }}
+
+                                    {% if form.end_date.errors %}
+
+                                    <div class="text-danger small">{{ form.end_date.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="mb-3">
+
+                                    {{ form.reason.label_tag }}
+
+                                    {{ form.reason }}
+
+                                    {% if form.reason.errors %}
+
+                                    <div class="text-danger small">{{ form.reason.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Leave History -->
+
+                <div class="col-12 col-md-8">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h5>Leave History</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-hover">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>Start Date</th>
+
+                                            <th>End Date</th>
+
+                                            <th>Days</th>
+
+                                            <th>Reason</th>
+
+                                            <th>Status</th>
+
+                                            <th>Applied On</th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for leave in leaves %}
+
+                                        <tr>
+
+                                            <td>{{ leave.start_date }}</td>
+
+                                            <td>{{ leave.end_date }}</td>
+
+                                            <td>{{ leave.get_total_days }}</td>
+
+                                            <td>{{ leave.reason|truncatewords:5 }}</td>
+
+                                            <td>
+
+                                                {% if leave.status == 'pending' %}
+
+                                                    <span class="badge bg-warning">Pending</span>
+
+                                                {% elif leave.status == 'approved' %}
+
+                                                    <span class="badge bg-success">Approved</span>
+
+                                                {% elif leave.status == 'rejected' %}
+
+                                                    <span class="badge bg-danger">Rejected</span>
+
+                                                {% endif %}
+
+                                            </td>
+
+                                            <td>{{ leave.applied_on|date:"d M Y" }}</td>
+
+                                        </tr>
+
+                                        {% empty %}
+
+                                        <tr>
+
+                                            <td colspan="6" class="text-center">No leave requests yet</td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Leave Summary -->
+
+                    <div class="card mt-3">
+
+                        <div class="card-body">
+
+                            <div class="row text-center">
+
+                                <div class="col-12 col-md-4 mb-4 mb-md-0">
+
+                                    <h6 class="text-muted">Pending</h6>
+
+                                    <h4 class="text-warning">{{ pending_count }}</h4>
+
+                                </div>
+
+                                <div class="col-12 col-md-4 mb-4 mb-md-0">
+
+                                    <h6 class="text-muted">Approved</h6>
+
+                                    <h4 class="text-success">{{ approved_count }}</h4>
+
+                                </div>
+
+                                <div class="col-12 col-md-4 mb-4 mb-md-0">
+
+                                    <h6 class="text-muted">Rejected</h6>
+
+                                    <h4 class="text-danger">{{ rejected_count }}</h4>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

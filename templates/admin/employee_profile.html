@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}{{ employee.full_name }} - Profile{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2>Employee Profile</h2>
+
+                <div>
+
+                    <a href="{% url 'employee_edit' employee.pk %}" class="btn btn-primary">Edit</a>
+
+                    <a href="{% url 'employee_list' %}" class="btn btn-secondary">Back</a>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="row">
+
+                <!-- Employee Details -->
+
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
+
+                    <div class="card mb-4">
+
+                        <div class="card-body text-center">
+
+                            {% if employee.photo %}
+
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}" 
+
+                                     class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+
+                            {% else %}
+
+                                <div class="bg-secondary rounded-circle mx-auto mb-3" 
+
+                                     style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
+
+                                    <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+
+                                </div>
+
+                            {% endif %}
+
+                            <h4>{{ employee.full_name }}</h4>
+
+                            <p class="text-muted">{{ employee.designation }}</p>
+
+                            <span class="badge {% if employee.is_active %}bg-success{% else %}bg-danger{% endif %}">
+
+                                {% if employee.is_active %}Active{% else %}Inactive{% endif %}
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h5>Contact Information</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <p><strong>Employee ID:</strong><br>{{ employee.employee_id }}</p>
+
+                            <p><strong>Email:</strong><br>{{ employee.email }}</p>
+
+                            <p><strong>Mobile:</strong><br>{{ employee.mobile_number }}</p>
+
+                            <p><strong>Base Salary:</strong><br>₹{{ employee.base_salary }}</p>
+
+                            <p><strong>Joined On:</strong><br>{{ employee.user.date_joined|date:"d M Y" }}</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Salary & Attendance -->
+
+                <div class="col-12 col-md-8">
+
+                    <!-- Current Month Salary -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+
+                            <h5>Current Month Salary</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <div class="col-6 col-md-3 mb-3">
+
+                                    <p class="text-muted mb-1">Base Salary</p>
+
+                                    <h5>₹{{ salary_data.base_salary }}</h5>
+
+                                </div>
+
+                                <div class="col-6 col-md-3 mb-3">
+
+                                    <p class="text-muted mb-1">Present Days</p>
+
+                                    <h5>{{ salary_data.present_days }}</h5>
+
+                                </div>
+
+                                <div class="col-6 col-md-3 mb-3">
+
+                                    <p class="text-muted mb-1">Approved Leaves</p>
+
+                                    <h5>{{ salary_data.approved_leaves }}</h5>
+
+                                </div>
+
+                                <div class="col-6 col-md-3 mb-3">
+
+                                    <p class="text-muted mb-1">Final Salary</p>
+
+                                    <h5 class="text-success">₹{{ salary_data.final_salary }}</h5>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Attendance Records -->
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h5>Recent Attendance</h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-sm">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>Date</th>
+
+                                            <th>Punch In</th>
+
+                                            <th>Punch Out</th>
+
+                                            <th>Status</th>
+
+                                            <th>Working Hours</th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for att in attendance_records %}
+
+                                        <tr>
+
+                                            <td>{{ att.date }}</td>
+
+                                            <td>
+
+                                                {{ att.punch_in|time:"h:i A"|default:"-" }}
+
+                                                {% if att.is_late %}
+
+                                                    <span class="badge bg-warning">Late</span>
+
+                                                {% endif %}
+
+                                            </td>
+
+                                            <td>{{ att.punch_out|time:"h:i A"|default:"-" }}</td>
+
+                                            <td>
+
+                                                {% if att.status == 'present' %}
+
+                                                    <span class="badge bg-success">Present</span>
+
+                                                {% elif att.status == 'late' %}
+
+                                                    <span class="badge bg-warning">Late</span>
+
+                                                {% elif att.status == 'absent' %}
+
+                                                    <span class="badge bg-danger">Absent</span>
+
+                                                {% endif %}
+
+                                            </td>
+
+                                            <td>{{ att.get_working_hours }}</td>
+
+                                        </tr>
+
+                                        {% empty %}
+
+                                        <tr>
+
+                                            <td colspan="5" class="text-center">No attendance records</td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Review Leave Request{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="row justify-content-center">
+
+                <div class="col-12 col-md-10">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h4>Leave Request Details</h4>
+
+                        </div>
+
+                        <div class="card-body">
+
+                    <!-- Employee Info -->
+
+                    <div class="row mb-3">
+
+                        <div class="col-12 col-md-6">
+
+                            <strong>Employee:</strong> {{ leave.employee.full_name }}<br>
+
+                            <strong>Employee ID:</strong> {{ leave.employee.employee_id }}<br>
+
+                            <strong>Designation:</strong> {{ leave.employee.designation }}
+
+                        </div>
+
+                        <div class="col-12 col-md-6">
+
+                            <strong>Applied On:</strong> {{ leave.applied_on|date:"d M Y, h:i A" }}<br>
+
+                            <strong>Current Status:</strong> 
+
+                            {% if leave.status == 'pending' %}
+
+                                <span class="badge bg-warning">Pending</span>
+
+                            {% elif leave.status == 'approved' %}
+
+                                <span class="badge bg-success">Approved</span>
+
+                            {% elif leave.status == 'rejected' %}
+
+                                <span class="badge bg-danger">Rejected</span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+
+                    <hr>
+
+
+
+                    <!-- Leave Details -->
+
+                    <div class="row mb-3">
+
+                        <div class="col-6 col-md-4">
+
+                            <strong>Start Date:</strong><br>
+
+                            {{ leave.start_date }}
+
+                        </div>
+
+                        <div class="col-6 col-md-4">
+
+                            <strong>End Date:</strong><br>
+
+                            {{ leave.end_date }}
+
+                        </div>
+
+                        <div class="col-6 col-md-4">
+
+                            <strong>Total Days:</strong><br>
+
+                            {{ leave.get_total_days }}
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <strong>Reason:</strong><br>
+
+                        <p class="border p-2 rounded">{{ leave.reason }}</p>
+
+                    </div>
+
+
+
+                    {% if leave.reviewed_by %}
+
+                    <hr>
+
+                    <div class="mb-3">
+
+                        <strong>Reviewed By:</strong> {{ leave.reviewed_by.username }}<br>
+
+                        <strong>Reviewed On:</strong> {{ leave.reviewed_on|date:"d M Y, h:i A" }}<br>
+
+                        {% if leave.admin_remarks %}
+
+                        <strong>Admin Remarks:</strong><br>
+
+                        <p class="border p-2 rounded">{{ leave.admin_remarks }}</p>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endif %}
+
+
+
+                    <!-- Review Form -->
+
+                    {% if leave.status == 'pending' %}
+
+                    <hr>
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+
+                            {{ form.status.label_tag }}
+
+                            {{ form.status }}
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            {{ form.admin_remarks.label_tag }}
+
+                            {{ form.admin_remarks }}
+
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+
+                            <a href="{% url 'leave_requests' %}" class="btn btn-secondary">Cancel</a>
+
+                        </div>
+
+                    </form>
+
+                    {% else %}
+
+                    <a href="{% url 'leave_requests' %}" class="btn btn-secondary">Back to Leave Requests</a>
+
+                    {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

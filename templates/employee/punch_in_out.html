@@ -1,0 +1,780 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}Punch In/Out{% endblock %}
+
+
+
+{% block extra_css %}
+
+<style>
+
+    #video {
+
+        width: 100%;
+
+        max-width: 640px;
+
+        border-radius: 10px;
+
+        border: 3px solid #4e73df;
+
+    }
+
+    
+
+    .camera-container {
+
+        position: relative;
+
+        display: inline-block;
+
+    }
+
+    
+
+    .status-indicator {
+
+        position: absolute;
+
+        top: 10px;
+
+        right: 10px;
+
+        padding: 10px 20px;
+
+        border-radius: 20px;
+
+        font-weight: bold;
+
+    }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "employee/includes/sidebar.html" %}
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <h2 class="mb-4">
+
+                <i class="bi bi-camera-fill"></i> Mark Attendance
+
+            </h2>
+
+            
+
+            <!-- Status Card -->
+
+            <div class="row mb-4">
+
+                <!-- Shift Information -->
+
+                {% if employee.shift %}
+
+                <div class="col-md-12 mb-3">
+
+                    <div class="alert alert-info">
+
+                        <h5>
+
+                            {% if employee.shift.name == 'morning' %}
+
+                                <i class="bi bi-sunrise"></i>
+
+                            {% else %}
+
+                                <i class="bi bi-moon-stars"></i>
+
+                            {% endif %}
+
+                            Your Shift: {{ employee.shift.get_name_display }}
+
+                        </h5>
+
+                        <p class="mb-0">
+
+                            <strong>Punch In Window:</strong> {{ employee.shift.punch_in_start|time:"h:i A" }} - {{ employee.shift.punch_in_end|time:"h:i A" }} 
+
+                            (Late after {{ employee.shift.punch_in_end|time:"h:i A" }})
+
+                            <br>
+
+                            <strong>Expected Punch Out:</strong> {{ employee.shift.punch_out_time|time:"h:i A" }}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+                
+
+                <div class="col-12">
+
+                    <div class="card">
+
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <div class="col-12 col-md-6">
+
+                                    <h5>Today's Status</h5>
+
+                                    {% if attendance %}
+
+                                        <p><strong>Punch In:</strong> 
+
+                                            {% if attendance.punch_in %}
+
+                                                <span class="text-success">{{ attendance.punch_in|date:"h:i A" }}</span>
+
+                                            {% else %}
+
+                                                <span class="text-muted">Not punched in</span>
+
+                                            {% endif %}
+
+                                        </p>
+
+                                        <p><strong>Punch Out:</strong> 
+
+                                            {% if attendance.punch_out %}
+
+                                                <span class="text-danger">{{ attendance.punch_out|date:"h:i A" }}</span>
+
+                                            {% else %}
+
+                                                <span class="text-muted">Not punched out</span>
+
+                                            {% endif %}
+
+                                        </p>
+
+                                    {% else %}
+
+                                        <p class="text-muted">No attendance marked today</p>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="col-12 col-md-6">
+
+                                    <h5>Location Status</h5>
+
+                                    <p id="locationStatus" class="text-muted">Checking location...</p>
+
+                                    <p id="distanceInfo" class="small text-muted"></p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Camera Section -->
+
+            <div class="row">
+
+                <div class="col-12 col-md-8 mx-auto">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-camera-video"></i> Camera Feed
+
+                        </div>
+
+                        <div class="card-body text-center">
+
+                            <div class="camera-container">
+
+                                <video id="video" autoplay playsinline></video>
+
+                                <div id="statusIndicator" class="status-indicator bg-secondary text-white" style="display: none;">
+
+                                    Ready
+
+                                </div>
+
+                            </div>
+
+                            <canvas id="canvas" style="display: none;"></canvas>
+
+                            
+
+                            <div class="mt-3">
+
+                                <button id="startCamera" class="btn btn-primary btn-lg">
+
+                                    <i class="bi bi-camera"></i> Start Camera
+
+                                </button>
+
+                                <button id="stopCamera" class="btn btn-secondary btn-lg" style="display: none;">
+
+                                    <i class="bi bi-camera-video-off"></i> Stop Camera
+
+                                </button>
+
+                            </div>
+
+                            
+
+                            <div class="mt-3">
+
+                                {% if not attendance or not attendance.punch_in %}
+
+                                    <button id="punchInBtn" class="btn btn-success btn-lg" disabled>
+
+                                        <i class="bi bi-box-arrow-in-right"></i> Punch In
+
+                                    </button>
+
+                                {% endif %}
+
+                                
+
+                                {% if attendance and attendance.punch_in and not attendance.punch_out %}
+
+                                    <button id="punchOutBtn" class="btn btn-danger btn-lg" disabled>
+
+                                        <i class="bi bi-box-arrow-right"></i> Punch Out
+
+                                    </button>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-12 col-md-4">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-info-circle"></i> Instructions
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <ol class="small">
+
+                                <li>Click "Start Camera" to enable webcam</li>
+
+                                <li>Position your face clearly in the camera</li>
+
+                                <li>Ensure you are within office premises</li>
+
+                                <li>Click "Punch In" or "Punch Out" button</li>
+
+                                <li>System will verify your face and location</li>
+
+                            </ol>
+
+                            
+
+                            <div class="alert alert-info small mt-3">
+
+                                <strong>Note:</strong> You must be within {{ office_location.radius }}m of office location to mark attendance.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    <div class="card mt-3">
+
+                        <div class="card-header">
+
+                            <i class="bi bi-geo-alt"></i> Office Location
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if office_location %}
+
+                                <p class="small mb-1"><strong>{{ office_location.name }}</strong></p>
+
+                                <p class="small text-muted mb-1">Lat: {{ office_location.latitude }}</p>
+
+                                <p class="small text-muted mb-1">Long: {{ office_location.longitude }}</p>
+
+                                <p class="small text-muted">Radius: {{ office_location.radius }}m</p>
+
+                            {% else %}
+
+                                <p class="text-muted small">No office location configured</p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Result Modal -->
+
+<div class="modal fade" id="resultModal" tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="modalTitle">Result</h5>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body text-center" id="modalBody">
+
+                <!-- Result will be shown here -->
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script>
+
+    const video = document.getElementById('video');
+
+    const canvas = document.getElementById('canvas');
+
+    const startCameraBtn = document.getElementById('startCamera');
+
+    const stopCameraBtn = document.getElementById('stopCamera');
+
+    const punchInBtn = document.getElementById('punchInBtn');
+
+    const punchOutBtn = document.getElementById('punchOutBtn');
+
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+
+    
+
+    let stream = null;
+
+    let userLocation = null;
+
+    
+
+    // Office location from backend
+
+    const officeLocation = {
+
+        lat: {{ office_location.latitude|default:"0" }},
+
+        lng: {{ office_location.longitude|default:"0" }},
+
+        radius: {{ office_location.radius|default:"200" }}
+
+    };
+
+    
+
+    // Get user location
+
+    function getUserLocation() {
+
+        if (navigator.geolocation) {
+
+            navigator.geolocation.getCurrentPosition(
+
+                (position) => {
+
+                    userLocation = {
+
+                        lat: position.coords.latitude,
+
+                        lng: position.coords.longitude
+
+                    };
+
+                    
+
+                    // Calculate distance
+
+                    const distance = calculateDistance(
+
+                        userLocation.lat, userLocation.lng,
+
+                        officeLocation.lat, officeLocation.lng
+
+                    );
+
+                    
+
+                    const locationStatus = document.getElementById('locationStatus');
+
+                    const distanceInfo = document.getElementById('distanceInfo');
+
+                    
+
+                    if (distance <= officeLocation.radius) {
+
+                        locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Within office premises';
+
+                        locationStatus.className = 'text-success';
+
+                        distanceInfo.textContent = `Distance: ${Math.round(distance)}m from office`;
+
+                    } else {
+
+                        locationStatus.innerHTML = '<i class="bi bi-x-circle text-danger"></i> Outside office premises';
+
+                        locationStatus.className = 'text-danger';
+
+                        distanceInfo.textContent = `Distance: ${Math.round(distance)}m from office (Must be within ${officeLocation.radius}m)`;
+
+                    }
+
+                },
+
+                (error) => {
+
+                    document.getElementById('locationStatus').innerHTML = 
+
+                        '<i class="bi bi-exclamation-triangle text-warning"></i> Location access denied';
+
+                    console.error('Location error:', error);
+
+                }
+
+            );
+
+        }
+
+    }
+
+    
+
+    // Calculate distance using Haversine formula
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+
+        const R = 6371000; // Earth radius in meters
+
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c;
+
+    }
+
+    
+
+    // Start camera
+
+    startCameraBtn.addEventListener('click', async () => {
+
+        try {
+
+            stream = await navigator.mediaDevices.getUserMedia({ 
+
+                video: { width: 640, height: 480 } 
+
+            });
+
+            video.srcObject = stream;
+
+            
+
+            startCameraBtn.style.display = 'none';
+
+            stopCameraBtn.style.display = 'inline-block';
+
+            statusIndicator.style.display = 'block';
+
+            statusIndicator.textContent = 'Camera Active';
+
+            statusIndicator.className = 'status-indicator bg-success text-white';
+
+            
+
+            // Enable punch buttons
+
+            if (punchInBtn) punchInBtn.disabled = false;
+
+            if (punchOutBtn) punchOutBtn.disabled = false;
+
+            
+
+        } catch (error) {
+
+            showResult('Error', 'Camera access denied. Please allow camera access.', 'danger');
+
+        }
+
+    });
+
+    
+
+    // Stop camera
+
+    stopCameraBtn.addEventListener('click', () => {
+
+        if (stream) {
+
+            stream.getTracks().forEach(track => track.stop());
+
+            video.srcObject = null;
+
+            
+
+            startCameraBtn.style.display = 'inline-block';
+
+            stopCameraBtn.style.display = 'none';
+
+            statusIndicator.style.display = 'none';
+
+            
+
+            if (punchInBtn) punchInBtn.disabled = true;
+
+            if (punchOutBtn) punchOutBtn.disabled = true;
+
+        }
+
+    });
+
+    
+
+    // Punch In
+
+    if (punchInBtn) {
+
+        punchInBtn.addEventListener('click', () => processPunch('punch_in'));
+
+    }
+
+    
+
+    // Punch Out
+
+    if (punchOutBtn) {
+
+        punchOutBtn.addEventListener('click', () => processPunch('punch_out'));
+
+    }
+
+    
+
+    // Process punch with face recognition
+
+    async function processPunch(action) {
+
+        if (!userLocation) {
+
+            showResult('Error', 'Please enable location access', 'danger');
+
+            return;
+
+        }
+
+        
+
+        statusIndicator.textContent = 'Processing...';
+
+        statusIndicator.className = 'status-indicator bg-warning text-dark';
+
+        
+
+        // Capture image
+
+        canvas.width = video.videoWidth;
+
+        canvas.height = video.videoHeight;
+
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        
+
+        try {
+
+            const response = await fetch('{% url "process_punch" %}', {
+
+                method: 'POST',
+
+                headers: {
+
+                    'Content-Type': 'application/json',
+
+                    'X-CSRFToken': '{{ csrf_token }}'
+
+                },
+
+                body: JSON.stringify({
+
+                    action: action,
+
+                    image: imageData,
+
+                    latitude: userLocation.lat,
+
+                    longitude: userLocation.lng
+
+                })
+
+            });
+
+            
+
+            const data = await response.json();
+
+            
+
+            if (data.success) {
+
+                statusIndicator.textContent = 'Success!';
+
+                statusIndicator.className = 'status-indicator bg-success text-white';
+
+                showResult('Success', data.message, 'success');
+
+                
+
+                // Reload page after 2 seconds
+
+                setTimeout(() => {
+
+                    window.location.reload();
+
+                }, 2000);
+
+            } else {
+
+                statusIndicator.textContent = 'Failed';
+
+                statusIndicator.className = 'status-indicator bg-danger text-white';
+
+                showResult('Failed', data.message, 'danger');
+
+            }
+
+            
+
+        } catch (error) {
+
+            statusIndicator.textContent = 'Error';
+
+            statusIndicator.className = 'status-indicator bg-danger text-white';
+
+            showResult('Error', 'Something went wrong. Please try again.', 'danger');
+
+        }
+
+    }
+
+    
+
+    // Show result modal
+
+    function showResult(title, message, type) {
+
+        document.getElementById('modalTitle').textContent = title;
+
+        document.getElementById('modalBody').innerHTML = `
+
+            <div class="alert alert-${type}">
+
+                <h5>${message}</h5>
+
+            </div>
+
+        `;
+
+        resultModal.show();
+
+    }
+
+    
+
+    // Get location on page load
+
+    getUserLocation();
+
+</script>
+
+{% endblock %}
+

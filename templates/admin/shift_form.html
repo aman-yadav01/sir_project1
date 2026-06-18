@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}{{ title }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+                {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <!-- Main Content -->
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="row justify-content-center">
+
+                <div class="col-12 col-md-8">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h4><i class="bi bi-clock-history"></i> {{ title }}</h4>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <form method="post">
+
+                                {% csrf_token %}
+
+                                
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">{{ form.name.label }}</label>
+
+                                    {{ form.name }}
+
+                                    {% if form.name.errors %}
+
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">{{ form.punch_in_start.label }}</label>
+
+                                        {{ form.punch_in_start }}
+
+                                        <small class="text-muted">Earliest time employees can punch in</small>
+
+                                        {% if form.punch_in_start.errors %}
+
+                                            <div class="text-danger">{{ form.punch_in_start.errors }}</div>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                    
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">{{ form.punch_in_end.label }}</label>
+
+                                        {{ form.punch_in_end }}
+
+                                        <small class="text-muted">After this time = Late</small>
+
+                                        {% if form.punch_in_end.errors %}
+
+                                            <div class="text-danger">{{ form.punch_in_end.errors }}</div>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                                
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">{{ form.punch_out_time.label }}</label>
+
+                                    {{ form.punch_out_time }}
+
+                                    <small class="text-muted">Expected punch out time</small>
+
+                                    {% if form.punch_out_time.errors %}
+
+                                        <div class="text-danger">{{ form.punch_out_time.errors }}</div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                
+
+                                <div class="mb-3 form-check">
+
+                                    {{ form.is_active }}
+
+                                    <label class="form-check-label">{{ form.is_active.label }}</label>
+
+                                </div>
+
+                                
+
+                                <div class="alert alert-info">
+
+                                    <strong><i class="bi bi-info-circle"></i> Example Timings:</strong><br>
+
+                                    <strong>Morning Shift:</strong> 06:00 AM - 10:00 AM (Late after 10 AM), Punch Out: 06:00 PM<br>
+
+                                    <strong>Night Shift:</strong> 06:00 PM - 10:00 PM (Late after 10 PM), Punch Out: 06:00 AM
+
+                                </div>
+
+                                
+
+                                <div class="d-flex gap-2">
+
+                                    <button type="submit" class="btn btn-primary">
+
+                                        <i class="bi bi-check-circle"></i> Save Shift
+
+                                    </button>
+
+                                    <a href="{% url 'shift_list' %}" class="btn btn-secondary">
+
+                                        <i class="bi bi-x-circle"></i> Cancel
+
+                                    </a>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

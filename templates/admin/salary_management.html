@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Salary Management{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        {% include "admin/includes/sidebar.html" %}
+
+        
+
+        <div class="col-md-10 content-wrapper">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h2><i class="bi bi-cash-stack"></i> Salary Management</h2>
+
+                <a href="{% url 'salary_cycle_settings' %}" class="btn btn-secondary">
+
+                    <i class="bi bi-gear"></i> Cycle Settings
+
+                </a>
+
+            </div>
+
+            
+
+            <!-- Cycle Info & Actions -->
+
+            <div class="card mb-4 border-primary">
+
+                <div class="card-header bg-primary text-white">
+
+                    <div class="row align-items-center">
+
+                        <div class="col-12 col-md-8 mb-2 mb-md-0">
+
+                            <h5 class="mb-0">
+
+                                <i class="bi bi-calendar-range"></i> 
+
+                                Current Cycle: {{ cycle_start|date:"d M Y" }} to {{ cycle_end|date:"d M Y" }}
+
+                            </h5>
+
+                        </div>
+
+                        <div class="col-12 col-md-4 text-md-end">
+
+                            <form method="post" action="{% url 'generate_salary_for_cycle' %}" style="display: inline;">
+
+                                {% csrf_token %}
+
+                                <input type="hidden" name="cycle_start" value="{{ cycle_start|date:'Y-m-d' }}">
+
+                                <input type="hidden" name="cycle_end" value="{{ cycle_end|date:'Y-m-d' }}">
+
+                                <button type="submit" class="btn btn-light" onclick="return confirm('Generate salary records for this cycle?');">
+
+                                    <i class="bi bi-gear"></i> Generate Salary
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Summary Cards -->
+
+            <div class="row mb-4">
+
+                <div class="col-6 col-md-3 mb-3">
+
+                    <div class="card text-white bg-primary">
+
+                        <div class="card-body">
+
+                            <h6 class="card-title">Total Payroll</h6>
+
+                            <h3>₹{{ total_payroll|floatformat:2 }}</h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-3">
+
+                    <div class="card text-white bg-success">
+
+                        <div class="card-body">
+
+                            <h6 class="card-title">Total Paid</h6>
+
+                            <h3>₹{{ total_paid|floatformat:2 }}</h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-3">
+
+                    <div class="card text-white bg-danger">
+
+                        <div class="card-body">
+
+                            <h6 class="card-title">Total Pending</h6>
+
+                            <h3>₹{{ total_pending|floatformat:2 }}</h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-md-3 mb-3">
+
+                    <div class="card text-white bg-info">
+
+                        <div class="card-body">
+
+                            <h6 class="card-title">Payment Progress</h6>
+
+                            <h3>
+
+                                {% if total_payroll > 0 %}
+
+                                    {% widthratio total_paid total_payroll 100 %}%
+
+                                {% else %}
+
+                                    0%
+
+                                {% endif %}
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Status Summary -->
+
+            <div class="card mb-4">
+
+                <div class="card-body">
+
+                    <div class="row text-center">
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Pending</h6>
+
+                            <h3 class="text-danger">{{ pending_count }}</h3>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Partially Paid</h6>
+
+                            <h3 class="text-warning">{{ partial_count }}</h3>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <h6 class="text-muted">Fully Paid</h6>
+
+                            <h3 class="text-success">{{ completed_count }}</h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Salary Table -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Employee Salary Records</h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Employee ID</th>
+
+                                    <th>Name</th>
+
+                                    <th>Designation</th>
+
+                                    <th>Final Salary</th>
+
+                                    <th>Total Paid</th>
+
+                                    <th>Pending</th>
+
+                                    <th>Status</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for salary in salaries %}
+
+                                <tr>
+
+                                    <td>{{ salary.employee.employee_id }}</td>
+
+                                    <td>{{ salary.employee.full_name }}</td>
+
+                                    <td>{{ salary.employee.designation }}</td>
+
+                                    <td class="fw-bold">₹{{ salary.final_salary|floatformat:2 }}</td>
+
+                                    <td class="text-success">₹{{ salary.total_paid|floatformat:2 }}</td>
+
+                                    <td class="text-danger">₹{{ salary.pending_amount|floatformat:2 }}</td>
+
+                                    <td>
+
+                                        {% if salary.payment_status == 'completed' %}
+
+                                            <span class="badge bg-success">
+
+                                                <i class="bi bi-check-circle"></i> Fully Paid
+
+                                            </span>
+
+                                        {% elif salary.payment_status == 'partial' %}
+
+                                            <span class="badge bg-warning">
+
+                                                <i class="bi bi-clock"></i> Partially Paid
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-danger">
+
+                                                <i class="bi bi-x-circle"></i> Pending
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+
+                                        <a href="{% url 'salary_detail' salary.id %}" class="btn btn-sm btn-primary">
+
+                                            <i class="bi bi-eye"></i> View
+
+                                        </a>
+
+                                        {% if salary.payment_status != 'completed' %}
+
+                                            <a href="{% url 'add_payment' salary.id %}" class="btn btn-sm btn-success">
+
+                                                <i class="bi bi-plus-circle"></i> Add Payment
+
+                                            </a>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                                {% empty %}
+
+                                <tr>
+
+                                    <td colspan="8" class="text-center text-muted py-4">
+
+                                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+
+                                        <p class="mt-2">No salary records found for this cycle.</p>
+
+                                        <p class="text-muted">Click "Generate Salary" button above to create records.</p>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <!-- Info Card -->
+
+            <div class="card mt-4">
+
+                <div class="card-header bg-info text-white">
+
+                    <i class="bi bi-info-circle"></i> How to Use
+
+                </div>
+
+                <div class="card-body">
+
+                    <ol>
+
+                        <li><strong>Generate Salary:</strong> Click "Generate Salary" button to create salary records for current cycle</li>
+
+                        <li><strong>View Details:</strong> Click "View" to see complete salary breakdown and payment history</li>
+
+                        <li><strong>Add Payment:</strong> Click "Add Payment" to record a payment (full or partial)</li>
+
+                        <li><strong>Track Status:</strong> Status automatically updates based on payments made</li>
+
+                    </ol>
+
+                    <hr>
+
+                    <h6 class="fw-bold">Payment Status:</h6>
+
+                    <ul class="mb-0">
+
+                        <li><span class="badge bg-danger">Pending</span> - No payment made yet (₹0 paid)</li>
+
+                        <li><span class="badge bg-warning">Partially Paid</span> - Some amount paid, balance pending</li>
+
+                        <li><span class="badge bg-success">Fully Paid</span> - Complete payment done</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

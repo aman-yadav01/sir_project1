@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #cameraContainer { display:none; }
+    #cameraPreview { width:100%; border-radius:12px; max-height:260px; object-fit:cover; background:#000; }
+    #capturedPreview { display:none; width:100%; border-radius:12px; max-height:260px; object-fit:cover; border:3px solid #11998e; }
+    .photo-tab-btn { cursor:pointer; border-radius:8px; padding:8px 16px; border:2px solid #ddd; background:#f8f9fa; font-weight:600; transition:all .2s; }
+    .photo-tab-btn.active { background:linear-gradient(135deg,#ff8c5a,#ff6b35); color:white; border-color:#ff6b35; }
+    .log-photo { width:100%; max-height:200px; object-fit:cover; border-radius:10px; cursor:pointer; }
+    .log-photo:hover { opacity:.85; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "employee/includes/sidebar.html" %}
+
+        <div class="col-md-10 content-wrapper">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'employee_task_list' %}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+                <h2><i class="bi bi-clipboard-check" style="color:#ff6b35;"></i> Task Detail</h2>
+            </div>
+
+            <div class="row">
+                <!-- Left: Task Info + Work Log Form -->
+                <div class="col-12 col-md-5 mb-4 mb-md-0">
+                    <!-- Task Info Card -->
+                    <div class="card mb-4" style="border-left:5px solid {% if task.priority == 'urgent' %}#fa709a{% elif task.priority == 'high' %}#ff6b35{% elif task.priority == 'medium' %}#f5c518{% else %}#11998e{% endif %};">
+                        <div class="card-header"><i class="bi bi-info-circle"></i> Task Info</div>
+                        <div class="card-body">
+                            <h4>{{ task.title }}</h4>
+                            <p style="white-space:pre-wrap;">{{ task.description }}</p>
+                            <hr>
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Priority</small><br>
+                                    {% if task.priority == 'urgent' %}<span class="badge" style="background:#fa709a;">🔴 Urgent</span>
+                                    {% elif task.priority == 'high' %}<span class="badge" style="background:#ff6b35;">🟠 High</span>
+                                    {% elif task.priority == 'medium' %}<span class="badge" style="background:#f5c518;color:#333;">🟡 Medium</span>
+                                    {% else %}<span class="badge" style="background:#11998e;">🟢 Low</span>{% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Deadline</small><br>
+                                    <strong>{{ task.deadline|date:"d M Y"|default:"—" }}</strong>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Status</small><br>
+                                {% if task.status == 'assigned' %}<span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);font-size:.9rem;">Assigned</span>
+                                {% elif task.status == 'in_progress' %}<span class="badge" style="background:linear-gradient(135deg,#f093fb,#f5576c);font-size:.9rem;">In Progress</span>
+                                {% else %}<span class="badge" style="background:linear-gradient(135deg,#11998e,#38ef7d);font-size:.9rem;">✓ Completed</span>{% endif %}
+                            </div>
+                            {% if task.status != 'completed' %}
+                            <div class="d-grid gap-2">
+                                {% if task.status == 'assigned' %}
+                                <button class="btn btn-warning" onclick="updateStatus('in_progress')">
+                                    <i class="bi bi-play-circle"></i> Start Karo
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-success" onclick="updateStatus('completed')">
+                                    <i class="bi bi-check-circle"></i> Complete Mark Karo
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="alert mb-0" style="background:linear-gradient(135deg,#11998e,#38ef7d);color:white;border-radius:10px;">
+                                <i class="bi bi-check-circle-fill"></i> Task completed hai!
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Work Log Form -->
+                    <div class="card">
+                        <div class="card-header" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;">
+                            <i class="bi bi-journal-plus"></i> Aaj Ka Work Log + Photo Bhejo
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="workLogForm">
+                                {% csrf_token %}
+                                <!-- Hidden input for camera captured image -->
+                                <input type="hidden" name="camera_photo_data" id="cameraPhotoData">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">{{ form.log_date.label }}</label>
+                                    {{ form.log_date }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">{{ form.description.label }}</label>
+                                    {{ form.description }}
+                                    <div class="form-text">Aaj kya kiya, kahan tak pahuncha — sab likho</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">{{ form.hours_worked.label }}</label>
+                                    {{ form.hours_worked }}
+                                </div>
+
+                                <!-- Photo Section -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold"><i class="bi bi-camera"></i> Task Photo Proof</label>
+
+                                    <!-- Tab buttons -->
+                                    <div class="d-flex gap-2 mb-3">
+                                        <div class="photo-tab-btn active" id="tabUpload" onclick="switchTab('upload')">
+                                            <i class="bi bi-upload"></i> Gallery Upload
+                                        </div>
+                                        <div class="photo-tab-btn" id="tabCamera" onclick="switchTab('camera')">
+                                            <i class="bi bi-camera-video"></i> Live Camera
+                                        </div>
+                                    </div>
+
+                                    <!-- Upload tab -->
+                                    <div id="uploadSection">
+                                        {{ form.photo }}
+                                        <div class="form-text">Gallery se photo select karo (max 10MB)</div>
+                                        <!-- Upload preview -->
+                                        <div id="uploadPreviewBox" class="mt-2" style="display:none;">
+                                            <img id="uploadPreviewImg" src="" class="log-photo" alt="Preview">
+                                            <button type="button" class="btn btn-sm btn-danger mt-1" onclick="clearUpload()">
+                                                <i class="bi bi-x"></i> Hatao
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Camera tab -->
+                                    <div id="cameraContainer">
+                                        <div class="position-relative mb-2">
+                                            <video id="cameraPreview" autoplay playsinline></video>
+                                            <img id="capturedPreview" src="" alt="Captured">
+                                        </div>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-info btn-sm" id="startCameraBtn" onclick="startCamera()">
+                                                <i class="bi bi-camera-video"></i> Camera Chalu Karo
+                                            </button>
+                                            <button type="button" class="btn btn-primary btn-sm" id="captureBtn" onclick="capturePhoto()" style="display:none;">
+                                                <i class="bi bi-camera"></i> Click Karo
+                                            </button>
+                                            <button type="button" class="btn btn-warning btn-sm" id="retakeBtn" onclick="retakePhoto()" style="display:none;">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Dobara Lo
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm" id="stopCameraBtn" onclick="stopCamera()" style="display:none;">
+                                                <i class="bi bi-stop-circle"></i> Band Karo
+                                            </button>
+                                        </div>
+                                        <!-- Hidden canvas for capture -->
+                                        <canvas id="captureCanvas" style="display:none;"></canvas>
+                                        <div id="cameraStatus" class="form-text mt-1"></div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 mt-2">
+                                    <i class="bi bi-send"></i> Work Log Submit Karo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Work Log History -->
+                <div class="col-12 col-md-7">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-journal-text"></i> Mera Work Log History
+                            <span class="badge bg-secondary ms-2">{{ work_logs.count }}</span>
+                        </div>
+                        <div class="card-body" style="max-height:none;">
+                            {% for log in work_logs %}
+                            <div class="card mb-3" style="border-left:4px solid #667eea;border-radius:10px;">
+                                <div class="card-body py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong><i class="bi bi-calendar3 me-1" style="color:#ff6b35;"></i> {{ log.log_date|date:"d M Y" }}</strong>
+                                        {% if log.hours_worked %}
+                                        <span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+                                            <i class="bi bi-clock"></i> {{ log.hours_worked }} hrs
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mb-2" style="white-space:pre-wrap;">{{ log.description }}</p>
+
+                                    {% if log.photo %}
+                                    <div class="mt-2 mb-2">
+                                        <img src="{{ log.photo.url }}" class="log-photo" alt="Task Photo"
+                                             onclick="openPhotoModal('{{ log.photo.url }}', '{{ log.log_date|date:"d M Y" }}')"
+                                             title="Click to enlarge">
+                                        <div class="form-text"><i class="bi bi-image"></i> Task proof photo</div>
+                                    </div>
+                                    {% endif %}
+
+                                    <small class="text-muted">Submitted: {{ log.created_at|date:"d M Y, h:i A" }}</small>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-journal" style="font-size:3rem;color:#ddd;"></i>
+                                <p class="mt-2">Abhi tak koi work log nahi bheja.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Modal (fullscreen view) -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:transparent;border:none;">
+            <div class="modal-body p-0 text-center position-relative">
+                <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" style="z-index:10;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <img id="modalPhoto" src="" style="max-width:100%;border-radius:12px;max-height:80vh;object-fit:contain;" alt="Task Photo">
+                <div id="modalCaption" class="text-white mt-2 fw-bold"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status update form -->
+<form id="statusForm" method="post" action="{% url 'employee_task_status_update' task.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="status" id="statusInput">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let videoStream = null;
+
+// ===== PHOTO INPUT — support both id variants =====
+const photoInput = document.getElementById('photoFileInput') || document.getElementById('id_photo');
+
+// ===== TAB SWITCH =====
+function switchTab(tab) {
+    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('tabCamera').classList.toggle('active', tab === 'camera');
+    document.getElementById('uploadSection').style.display = tab === 'upload' ? '' : 'none';
+    document.getElementById('cameraContainer').style.display = tab === 'camera' ? '' : 'none';
+    if (tab !== 'camera') stopCamera();
+}
+
+// ===== GALLERY UPLOAD PREVIEW =====
+if (photoInput) {
+    photoInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('uploadPreviewImg').src = e.target.result;
+                document.getElementById('uploadPreviewBox').style.display = '';
+            };
+            reader.readAsDataURL(file);
+            document.getElementById('cameraPhotoData').value = '';
+            const cp = document.getElementById('capturedPreview');
+            if (cp) cp.style.display = 'none';
+        }
+    });
+}
+
+function clearUpload() {
+    if (photoInput) photoInput.value = '';
+    document.getElementById('uploadPreviewBox').style.display = 'none';
+}
+
+// ===== LIVE CAMERA =====
+async function startCamera() {
+    try {
+        document.getElementById('cameraStatus').textContent = 'Camera open ho rahi hai...';
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        const video = document.getElementById('cameraPreview');
+        video.srcObject = videoStream;
+        video.style.display = '';
+        document.getElementById('capturedPreview').style.display = 'none';
+        document.getElementById('startCameraBtn').style.display = 'none';
+        document.getElementById('captureBtn').style.display = '';
+        document.getElementById('stopCameraBtn').style.display = '';
+        document.getElementById('retakeBtn').style.display = 'none';
+        document.getElementById('cameraStatus').textContent = '✅ Camera ready - Photo click karo';
+    } catch(err) {
+        document.getElementById('cameraStatus').textContent = '❌ Camera nahi mili: ' + err.message;
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraPreview');
+    const canvas = document.getElementById('captureCanvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    document.getElementById('cameraPhotoData').value = dataUrl;
+
+    // Show captured preview
+    document.getElementById('capturedPreview').src = dataUrl;
+    document.getElementById('capturedPreview').style.display = '';
+    document.getElementById('cameraPreview').style.display = 'none';
+
+    document.getElementById('captureBtn').style.display = 'none';
+    document.getElementById('retakeBtn').style.display = '';
+    document.getElementById('cameraStatus').textContent = '📸 Photo capture ho gayi! Submit karo ya dobara lo.';
+
+    // Clear file upload
+    if (photoInput) photoInput.value = '';
+    document.getElementById('uploadPreviewBox').style.display = 'none';
+
+    // Stop camera stream
+    stopStream();
+}
+
+function retakePhoto() {
+    document.getElementById('cameraPhotoData').value = '';
+    document.getElementById('capturedPreview').style.display = 'none';
+    document.getElementById('cameraPreview').style.display = '';
+    document.getElementById('retakeBtn').style.display = 'none';
+    document.getElementById('captureBtn').style.display = '';
+    document.getElementById('startCameraBtn').style.display = 'none';
+    document.getElementById('cameraStatus').textContent = '';
+    startCamera();
+}
+
+function stopStream() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(t => t.stop());
+        videoStream = null;
+    }
+}
+
+function stopCamera() {
+    stopStream();
+    document.getElementById('cameraPreview').style.display = 'none';
+    document.getElementById('startCameraBtn').style.display = '';
+    document.getElementById('captureBtn').style.display = 'none';
+    document.getElementById('stopCameraBtn').style.display = 'none';
+    document.getElementById('retakeBtn').style.display = 'none';
+    document.getElementById('cameraStatus').textContent = '';
+}
+
+// Stop camera when leaving page
+window.addEventListener('beforeunload', stopStream);
+
+// ===== PHOTO MODAL =====
+function openPhotoModal(url, caption) {
+    document.getElementById('modalPhoto').src = url;
+    document.getElementById('modalCaption').textContent = caption;
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+
+// ===== STATUS UPDATE =====
+function updateStatus(status) {
+    const labels = { 'in_progress': 'In Progress', 'completed': 'Completed' };
+    if (confirm('Task status "' + labels[status] + '" mark karna chahte ho?')) {
+        document.getElementById('statusInput').value = status;
+        document.getElementById('statusForm').submit();
+    }
+}
+</script>
+{% endblock %}
